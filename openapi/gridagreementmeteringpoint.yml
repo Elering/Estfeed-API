@@ -1,0 +1,527 @@
+openapi: 3.0.3
+info:
+  title: gridAgreementMeteringPoint
+  version: 0.1.0
+  description: API to create metering point and grid agreement in one call
+paths:
+  /api/v1/gridagreementmeteringpoint:
+    post:
+      operationId: request-agreement-with-meter
+      summary: Create meter with metadata and connected grid agreement
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  meterMetadata:
+                    $ref: '#/components/schemas/meterMetadata'
+                  agreement:
+                    $ref: '#/components/schemas/agreement'
+        description: >-
+          Submit the meter metadata object to create the meter
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/headers/status'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/headers/x-document-date-time'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/headers/x-document-identification'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/headers/x-document-identification'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    meterMetadata:
+                      $ref: '#/components/schemas/meterCommonResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>
+  schemas:
+    dateTime:
+      type: string
+      format: datetime
+      description: ISO 8601 zone datetime
+      # RegEx to verify the yyyy-MM-ddTHH:mm:ssZ format
+      pattern: >-
+        [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?
+    date:
+      type: string
+      format: date
+      description: ISO 8601 date
+      # RegEx to verify the yyyy-MM-dd format
+      pattern: >-
+        [0-9]{4}-[0-9]{2}-[0-9]{2}
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+      minLength: 36
+      maxLength: 36
+      # RegEx to verify the UUID format
+      pattern: >-
+        ^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    meterCommon:
+      type: object
+      description: Common meter metadata
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        meterCommodity:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+        meterType:
+          type: string
+          enum: [REMOTE_READING, VIRTUAL, NON_REMOTE_READING]
+      required:
+        - meterEic
+        - meterCommodity
+        - meterType
+    meterCommonResponse:
+      type: object
+      description: Common meter metadata
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        meterCommodity:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+        meterType:
+          type: string
+          enum: [REMOTE_READING, VIRTUAL, NON_REMOTE_READING]
+        meterVersion:
+          type: integer
+          minimum: 1
+        agreementId:
+          type: string
+          maxLength: 50
+        agreementVersion:
+          type: integer
+          minimum: 1
+      required:
+        - meterEic
+        - meterCommodity
+        - meterType
+        - meterVersion
+        - agreementId
+        - agreementVersion
+    electricityCharacteristics:
+      type: object
+      description: Electricity characteristics
+      properties:
+        consumptionScale:
+          type: string
+          enum: [SMALL, LARGE]
+        connectionState:
+          type: string
+          enum: [CONNECTED, DISCONNECTED]
+        resolution:
+          type: string
+          enum: [PT15M, PT1H]
+        customerType:
+          type: string
+          enum: [CONSUMER, GRID_OPERATOR, PRODUCER, MICRO, LINE_OPERATOR, ENERGY_STORAGE_UNIT, CHARGING_POINT_OPERATOR]
+        production:
+          type: boolean
+        productionSource:
+          type: string
+          enum: [SOLAR, WIND, HYDRO, BIOGAS, BIOMASS, NATURAL_GAS, OIL_SHALE, OTHER_RENEWABLE, OTHER_NON_RENEWABLE]
+        borderPoint:
+          type: boolean
+        transmissionNetwork:
+          type: string
+        appartmentAssociation:
+          type: boolean
+        isolatedMeteringPoint:
+          type: boolean
+        electricalHeating:
+          type: boolean
+        chargingPoint:
+          type: boolean
+        storageCapacity:
+          type: integer
+        storageEnergy:
+          type: integer
+        productionCapacity:
+          type: integer
+        transmissionCapacity:
+          type: integer
+      required:
+        - consumptionScale
+        - connectionState
+        - resolution
+        - customerType
+        - production
+        - borderPoint
+        - transmissionNetwork
+        - appartmentAssociation
+        - isolatedMeteringPoint
+        - electricalHeating
+        - chargingPoint
+        - storageCapacity
+        - storageEnergy
+        - productionCapacity
+        - transmissionCapacity
+    gasCharacteristics:
+      type: object
+      description: Gas characteristics
+      properties:
+        consumptionScale:
+          type: string
+          enum: [SMALL, LARGE]
+        connectionState:
+          type: string
+          enum: [CONNECTED, DISCONNECTED]
+        resolution:
+          type: string
+          enum: [PT1H, P1D]
+        customerType:
+          type: string
+          enum: [CONSUMER, CONSUMER_2, GRID_OPERATOR, PRODUCER, PROTECTED, PROTECTED_OTHER, GENERAL_INTEREST_SERVICE_PROVIDER, POWER_PRODUCER_FROM_GAS, LNG_OPERATOR]
+        production:
+          type: boolean
+        productionSource:
+          type: string
+          enum: [BIOGAS]
+        borderPoint:
+          type: boolean
+        transmissionNetwork:
+          type: string
+        appartmentAssociation:
+          type: boolean
+      required:
+        - consumptionScale
+        - connectionState
+        - resolution
+        - customerType
+        - production
+        - borderPoint
+        - transmissionNetwork
+        - appartmentAssociation
+    aggregatorCharacteristics:
+      type: object
+      description: Aggregator characteristics
+      properties:
+        parentMeterEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - parentMeterEic
+    location:
+      type: object
+      description: Location object
+      properties:
+        adsId:
+          type: integer
+        comment:
+          type: string
+          maxLength: 255
+      required:
+        - adsId
+    meterMetadata:
+      type: object
+      description: Meter metadata object (full dataset)
+      properties:
+        meterCommon:
+          $ref: '#/components/schemas/meterCommon'
+        location:
+          $ref: '#/components/schemas/location'
+      required:
+        - meterCommon
+        - location
+      anyOf:
+        - properties:
+            electricityCharacteristics:
+              $ref: '#/components/schemas/electricityCharacteristics'
+        - properties:
+            gasCharacteristics:
+              $ref: '#/components/schemas/gasCharacteristics'
+        - properties:
+            aggregatorCharacteristics:
+              $ref: '#/components/schemas/aggregatorCharacteristics'
+    agreement:
+      type: object
+      properties:
+        agreementType:
+          type: string
+          description: Agreement type 
+          enum: [GRID]
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+         type: boolean
+        dateStart:
+          $ref: '#/components/schemas/date'
+        dateEnd:
+          $ref: '#/components/schemas/date'
+      required:
+        - agreementType
+        - serviceProviderEic
+        - customerEic
+        - dateStart
+        - dateEnd
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minLength: 3
+          maxLength: 3
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+    reasonText:
+      type: string
+      description: Textual reason of the response
+  headers:
+    status:
+      deprecated: false
+      required: false
+      schema:
+        $ref: '#/components/schemas/statusCode'
+    x-document-date-time:
+      deprecated: false
+      required: true
+      schema:
+        $ref: '#/components/schemas/dateTime'
+    x-document-identification:
+      deprecated: false
+      required: true
+      schema:
+        $ref: '#/components/schemas/uniqueId'
+    x-original-document-identification:
+      deprecated: false
+      required: false
+      schema:
+        $ref: '#/components/schemas/uniqueId'
+    WWW-Authenticate:
+      deprecated: false
+      required: false
+      schema:
+        $ref: '#/components/schemas/reasonText'
+  responses:
+    badRequest:
+      description: Bad Request
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/headers/status'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/headers/status'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        WWW-Authenticate:
+          description: The required authentication method should be used to gain access to the resource
+          schema:
+            $ref: '#/components/headers/WWW-Authenticate'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+    forbidden:
+      description: Forbidden
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/headers/status'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+    notFound:
+      description: Not found
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/headers/status'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+    unprocessableEntity:
+      description: Unprocessable entity
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/headers/status'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/headers/x-document-date-time'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/headers/x-document-identification'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unprocessableEntity'
+servers:
+  - url: https://test-newavp.elering.ee
+security:
+  - JWTAuth: []
