@@ -4,8 +4,8 @@ info:
   version: 0.1.0
   description: API to create, read, and update customer information.
 paths:
-  /api/v1/customer:
-    get:
+  /api/v1/customer/search:
+    post:
       operationId: find-customer
       summary: Find a customer by EIC
       security:
@@ -23,24 +23,19 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: country
-          description: Country of the customer identifier
-          required: true
-          schema:
-            $ref: '#/components/schemas/country'
-        - in: query
-          name: identifier
-          description: Identifier of the customer
-          required: true
-          schema:
-            $ref: '#/components/schemas/identifier'
-        - in: query
-          name: registry
-          description: Registry of the customer identifier
-          required: true
-          schema:
-            $ref: '#/components/schemas/registry'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                identification:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/identification'
       description: >-
           Submit the customer identification to receive the customer EIC and name
       responses:
@@ -66,7 +61,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/customerEic'
+                type: array
+                items:
+                  $ref: '#/components/schemas/customerEic'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -77,6 +74,7 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/customer:
     post:
       operationId: request-customer
       summary: Create customer and receive EIC
@@ -100,7 +98,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/customerPersonal'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customerPersonal:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/customerPersonal'
         description: >-
           Submit the customer object to create the customer or identify the
           customer and update the name
@@ -127,7 +132,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/eic'
+                type: array
+                items:
+                  $ref: '#/components/schemas/eic'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -159,7 +166,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/customerPersonal'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customerPersonal:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/customerPersonal'
         description: >-
           Submit the customer object to identify the customer and update the
           name
@@ -186,7 +200,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/eic'
+                type: array
+                items:
+                  $ref: '#/components/schemas/eic'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -248,10 +264,10 @@ components:
       enum: [IS, AR, NA]
     givenName:
       type: string
-      maxLength: 100
+      maxLength: 250
     surname:
       type: string
-      maxLength: 100
+      maxLength: 250
     identification:
       type: object
       description: Identification block
@@ -291,6 +307,24 @@ components:
           $ref: '#/components/schemas/givenName'
         surname:
           $ref: '#/components/schemas/surname'
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -325,25 +359,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -365,11 +386,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueIdentification'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -413,10 +429,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:

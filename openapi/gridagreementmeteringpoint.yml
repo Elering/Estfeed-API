@@ -28,14 +28,19 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  meterMetadata:
-                    $ref: '#/components/schemas/meterMetadata'
-                  agreement:
-                    $ref: '#/components/schemas/agreement'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                gridAgreementMeteringPoint:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      meterMetadata:
+                        $ref: '#/components/schemas/meterMetadata'
+                      agreement:
+                        $ref: '#/components/schemas/agreement'
         description: >-
           Submit the meter metadata object to create the meter
       responses:
@@ -63,10 +68,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    meterMetadata:
-                      $ref: '#/components/schemas/meterCommonResponse'
+                  $ref: '#/components/schemas/meterCommonResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -322,6 +324,24 @@ components:
         - customerEic
         - dateStart
         - dateEnd
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -356,25 +376,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -396,11 +403,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueId'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -444,10 +446,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:

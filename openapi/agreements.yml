@@ -28,7 +28,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/agreementAttributes'
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementAttributes:
+                    $ref: '#/components/schemas/agreementAttributes'
       description: >-
         Submit at least of the customer identification or meter identification or agreement ID to receive the agreement details, with optional filtering using the period or agreement type
       responses:
@@ -54,7 +59,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/agreementResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/agreementResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -89,11 +96,13 @@ paths:
         content:
           application/json:
             schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    agreement:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreement:
+                    type: array
+                    items:
                       $ref: '#/components/schemas/agreement'
         description: >-
           Submit the agreements object to create agreement
@@ -122,11 +131,8 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    agreementId:
-                      type: string
-                      maxLength: 50
+                  type: string
+                  maxLength: 50
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -158,11 +164,13 @@ paths:
         content:
           application/json:
             schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    agreementChange:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementChange:
+                    type: array
+                    items:
                       $ref: '#/components/schemas/agreementChange'
         description: >-
           Submit the agreements object with their IDs to update agreements
@@ -186,6 +194,13 @@ paths:
               description: Request document unique identification
               schema:
                 $ref: '#/components/headers/x-document-identification'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  maxLength: 50
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -218,17 +233,22 @@ paths:
       requestBody:
         required: true
         content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    agreementId:
-                      type: string
-                      maxLength: 50
-                    serviceProviderEic:
-                      $ref: '#/components/schemas/eic'
+          application/json:
+            schema:
+                type: object
+                properties:
+                  senderContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementDelete:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        agreementId:
+                          type: string
+                          maxLength: 50
+                        serviceProviderEic:
+                          $ref: '#/components/schemas/eic'
       description: >-
         Submit the agreement ID to delete the identified object
       responses:
@@ -251,6 +271,13 @@ paths:
               description: Request document unique identification
               schema:
                 $ref: '#/components/headers/x-document-identification'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  maxLength: 50
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -334,8 +361,8 @@ components:
         - agreementType
         - serviceProviderEic
         - customerEic
-        - periodStart
-        - periodEnd
+        - dateStart
+        - datedEnd
     agreementResponse:
       type: object
       properties:
@@ -352,9 +379,9 @@ components:
           $ref: '#/components/schemas/eic'
         preliminaryTerminationFee:
          type: boolean
-        periodStart:
+        dateStart:
           $ref: '#/components/schemas/date'
-        periodEnd:
+        dateEnd:
           $ref: '#/components/schemas/date'
         version:
           type: integer
@@ -365,8 +392,8 @@ components:
         - agreementType
         - serviceProviderEic
         - customerEic
-        - periodStart
-        - periodEnd
+        - dateStart
+        - dateEnd
     agreementChange:
       type: object
       properties:
@@ -383,9 +410,9 @@ components:
           $ref: '#/components/schemas/eic'
         preliminaryTerminationFee:
          type: boolean
-        periodStart:
+        dateStart:
           $ref: '#/components/schemas/date'
-        periodEnd:
+        dateEnd:
           $ref: '#/components/schemas/date'
       required:
         - agreementId
@@ -405,21 +432,33 @@ components:
           $ref: '#/components/schemas/eic'
         preliminaryTerminationFee:
          type: boolean
-        periodStart:
+        dateStart:
           $ref: '#/components/schemas/date'
-        periodEnd:
+        dateEnd:
           $ref: '#/components/schemas/date'
-        # Is purpose required when searching for agreements?
-        purpose:
-          type: string
-          maxLength: 50
-      required:
-        - purpose
       anyOf:
         - required: [agreementId]
         - required: [meterEic]
         - required: [customerEic]
         - required: [serviceProviderEic]
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -454,25 +493,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -494,11 +520,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueId'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -542,10 +563,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:

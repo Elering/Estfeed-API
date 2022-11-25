@@ -28,7 +28,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/meterAttributes'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterAttributes:
+                  $ref: '#/components/schemas/meterAttributes'
       description: >-
         Submit the meter identifications, timeframe, and the purpose to receive the meter reading data
       responses:
@@ -54,7 +59,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/meterData'
+                type: array
+                items:
+                  $ref: '#/components/schemas/accountTimeSeries'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -89,7 +96,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/meterData'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterData:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/accountTimeSeries'
         description: >-
           Submit the meter reading data object to create the meter reading
       responses:
@@ -143,7 +157,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/meterData'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterData:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/accountTimeSeries'
         description: >-
           Submit the meter reading data object to update the meter reading
       responses:
@@ -177,7 +198,7 @@ paths:
         "422":
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/meter-data/status:
-    get:
+    post:
       operationId: find-meter-data-status
       summary: Find meter data processing status by document and issuer identification
       security:
@@ -195,20 +216,26 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: originalDocumentIdentification
-          description: Request document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
-        - in: query
-          name: issuerEic
-          description: Request issuer EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                documentInfo:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      originalDocumentIdentification:
+                        $ref: '#/components/schemas/uniqueId'
+                      senderEic:
+                        $ref: '#/components/schemas/eic'
       description: >-
-        Submit the issuer and document identification to receive the processing status
+        Submit the sender and document identification to receive the processing status
       responses:
         '200':
           description: OK
@@ -232,7 +259,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status'
+                type: array
+                items:
+                  $ref: '#/components/schemas/status'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -244,7 +273,7 @@ paths:
         "422":
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/meter-data/change:
-    get:
+    post:
       operationId: find-meter-data-change
       summary: Find metering points where data was changed within the defined period
       security:
@@ -262,24 +291,26 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: updatePeriodStart
-          description: Meter reading modification start datetime
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: query
-          name: updatePeriodEnd
-          description: Meter reading modification end datetime
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: query
-          name: serviceProviderEic
-          description: RService provider EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterUpdateInfo:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      updatePeriodStart:
+                        $ref: '#/components/schemas/dateTime'
+                      updatePeriodEnd:
+                        $ref: '#/components/schemas/dateTime'
+                      serviceProviderEic:
+                        $ref: '#/components/schemas/eic'
       description: >-
         Submit the modification period to receive a list of metering points where data has changed during the marked time interval
       responses:
@@ -361,6 +392,8 @@ components:
     status:
       type: object
       properties:
+        originalDocumentIdentification:
+          $ref: '#/components/schemas/uniqueId'
         statusCode:
           $ref: '#/components/schemas/statusCode'
         reasonText:
@@ -373,10 +406,6 @@ components:
     resolution:
       type: string
       enum: [PT15M, PT1H, P1D]
-    meterData:
-      type: array
-      items:
-        $ref: '#/components/schemas/accountTimeSeries'
     accountTimeSeries:
       type: object
       properties:
@@ -458,16 +487,11 @@ components:
           $ref: '#/components/schemas/dateTime'
         periodEnd:
           $ref: '#/components/schemas/dateTime'
-        # Is purpose required when searching for meter reading data?
-        purpose:
-          type: string
-          maxLength: 50
       required:
         - serviceProviderEic
         - meterEic
         - periodStart
         - periodEnd
-        - purpose
     meterUpdates:
       type: object
       description: Meter identification and subject period when data was modified
@@ -482,6 +506,24 @@ components:
         - meterEic
         - periodStart
         - periodEnd
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -516,25 +558,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -556,11 +585,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueId'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -604,10 +628,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:

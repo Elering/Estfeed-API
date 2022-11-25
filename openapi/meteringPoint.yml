@@ -7,7 +7,7 @@ paths:
   /api/v1/meter/search:
     post:
       operationId: find-meter
-      summary: Find a meter by EIC
+      summary: Find a meter by attributes
       security:
         - JWTAuth: []
       parameters:
@@ -28,7 +28,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/meterAttributes'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterAttributes:
+                  $ref: '#/components/schemas/meterAttributes'
       description: >-
         Submit the meter identification to receive the meter metadata
       responses:
@@ -56,10 +61,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    meterMetadata:
-                      $ref: '#/components/schemas/meterMetadataResponse'
+                  $ref: '#/components/schemas/meterMetadataResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -89,22 +91,18 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: meterEic
-          description: Meter EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  meterMetadata:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterMetadata:
+                  type: array
+                  items:
                     $ref: '#/components/schemas/meterMetadata'
         description: >-
           Submit the meter metadata object to create the meter
@@ -133,10 +131,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    meterMetadata:
-                      $ref: '#/components/schemas/meterCommonResponse'
+                  $ref: '#/components/schemas/meterCommonResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -163,22 +158,18 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: meterEic
-          description: Meter EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  meterMetadata:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterMetadata:
+                  type: array
+                  items:
                     $ref: '#/components/schemas/meterMetadata'
         description: >-
           Submit the meter metadata object to update its metadata
@@ -207,10 +198,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    meterMetadata:
-                      $ref: '#/components/schemas/meterCommonResponse'
+                  $ref: '#/components/schemas/meterCommonResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -221,7 +209,8 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-    get:
+  /api/v1/meter/search/customer:
+    post:
       operationId: find-meter-of-customer
       summary: Find a meter by Customer EIC
       security:
@@ -239,19 +228,19 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: customerEic
-          description: Customer EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
-        - in: query
-          name: purpose
-          description: Purpose of the request
-          required: true
-          schema:
-            type: string
-            maxLength: 50
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customerEic:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/eic'
       description: >-
         Submit the customer identification and optionally the commodity type to receive the meter metadata
       responses:
@@ -279,10 +268,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    meterMetadata:
-                      $ref: '#/components/schemas/meterMetadataResponse'
+                  $ref: '#/components/schemas/meterMetadataResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -602,11 +588,6 @@ components:
           $ref: '#/components/schemas/aggregatorCharacteristicsAttributes'
         location:
           $ref: '#/components/schemas/location'
-        purpose:
-          type: string
-          maxLength: 50
-      required:
-        - purpose
     meterMetadataResponse:
       type: object
       description: Meter metadata object (full dataset)
@@ -628,6 +609,24 @@ components:
         - properties:
             aggregatorCharacteristics:
               $ref: '#/components/schemas/aggregatorCharacteristics'
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -662,25 +661,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -702,11 +688,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueId'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -750,10 +731,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:

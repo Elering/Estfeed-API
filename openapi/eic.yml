@@ -5,8 +5,8 @@ info:
   description: API to create EIC ranges, get unused EICs, and verify EICs.
 paths:
   /api/v1/eic/range:
-    get:
-      operationId: get-eics
+    post:
+      operationId: get-eic-from-range
       summary: Get a list of unused EICs from a range
       security:
         - JWTAuth: []
@@ -23,26 +23,26 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: eicRangeStart
-          description: First element of EIC range
-          required: false
-          schema:
-            $ref: '#/components/schemas/eic'
-        - in: query
-          name: eicRangeEnd
-          description: Last element of EIC range
-          required: false
-          schema:
-            $ref: '#/components/schemas/eic'
-        - in: query
-          name: count
-          description: Number of EIC to be retreived
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                eicRangeItems:
+                  type: object
+                  properties:
+                    eicRangeStart:
+                      $ref: '#/components/schemas/eic'
+                    eicRangeEnd:
+                      $ref: '#/components/schemas/eic'
+                    count:
+                      type: integer
+                      minimum: 1
+                      maximum: 100
       description: >-
         Submit the EIC range borders and desired number of unique codes to receive a list of unused EICs
       responses:
@@ -80,7 +80,8 @@ paths:
         "404":
           $ref: '#/components/responses/notFound'
         "422":
-          $ref: '#/components/responses/unprocessableEntity'      
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/eic/range/create:
     post:
       operationId: create-eic-range
       summary: Create an EIC range for a given operation type
@@ -99,20 +100,24 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: serviceProviderEic
-          description: Service provider EIC identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
-        - in: query
-          name: eicRangeType
-          description: Operation type for the EIC range
-          required: true
-          schema:
-            type: string
-            description: EIC code types
-            enum: [MEASUREMENT_POINT, RESOURCE_OBJECT]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                eicRange:
+                  type: object
+                  properties:
+                    serviceProviderEic:
+                      $ref: '#/components/schemas/eic'
+                    eicRangeType:
+                      type: string
+                      description: EIC code types
+                      enum: [MEASUREMENT_POINT, RESOURCE_OBJECT]
       description: >-
         Submit an operation type to receive a new EIC range
       responses:
@@ -153,7 +158,7 @@ paths:
         "422":
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/eic/verify:
-    get:
+    post:
       operationId: verify-eics
       summary: Verify an EIC
       security:
@@ -171,12 +176,19 @@ paths:
           required: true
           schema:
             $ref: '#/components/headers/x-document-identification'
-        - in: query
-          name: eic
-          description: EIC code for verification
-          required: true
-          schema:
-            $ref: '#/components/schemas/eic'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                eic:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/eic'
       description: >-
         Submit an EIC for verification
       responses:
@@ -199,6 +211,17 @@ paths:
               description: Request document unique identification
               schema:
                 $ref: '#/components/headers/x-document-identification'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    eic:
+                      $ref: '#/components/schemas/eic'
+                    result:
+                      type: boolean
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -209,6 +232,7 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/eic/verify/create:
     post:
       operationId: generate-eic-check
       summary: Generate EIC check character
@@ -232,9 +256,14 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/eicWithoutCheck'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                eicWithoutCheck:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/eicWithoutCheck'
       description: >-
         Submit an EIC for verification
       responses:
@@ -297,9 +326,14 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/eicAttributes'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                eicAttributes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/eicAttributes'
       description: >-
         Submit attributes for EIC creation
       responses:
@@ -322,6 +356,17 @@ paths:
               description: Request document unique identification
               schema:
                 $ref: '#/components/headers/x-document-identification'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    displayName:
+                      $ref: '#/components/schemas/displayName'
+                    eic:
+                      $ref: '#/components/schemas/eic'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -387,6 +432,10 @@ components:
       # RegEx to verify the e-mail format (RFC 5322)
       pattern: >-
         (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 16
     acerCode:
       type: string
       format: acer
@@ -412,8 +461,7 @@ components:
           type: string
           maxLength: 70
         displayName:
-          type: string
-          maxLength: 16
+          $ref: '#/components/schemas/displayName'
         contactName:
           type: string
           maxLength: 70
@@ -480,6 +528,24 @@ components:
         - locality
         - localAddress
         - postalCode
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     badRequest:
       type: object
       description: Bad Request
@@ -514,25 +580,12 @@ components:
       type: object
       description: Default problem object
       properties:
-        type:
+        code:
           type: string
-          format: uri
-        title:
+        message:
           type: string
-        status:
-          type: integer
-          minLength: 3
-          maxLength: 3
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
         cause:
           $ref: '#/components/schemas/defaultProblem'
-    reasonText:
-      type: string
-      description: Textual reason of the response
   headers:
     status:
       deprecated: false
@@ -554,11 +607,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/uniqueId'
-    WWW-Authenticate:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/reasonText'
   responses:
     badRequest:
       description: Bad Request
@@ -602,10 +650,6 @@ components:
           description: Request document unique identification
           schema:
             $ref: '#/components/headers/x-document-identification'
-        WWW-Authenticate:
-          description: The required authentication method should be used to gain access to the resource
-          schema:
-            $ref: '#/components/headers/WWW-Authenticate'
       content:
         application/json:
           schema:
