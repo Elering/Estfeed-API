@@ -16,7 +16,7 @@ Reasons for including this information with each API:
 * to provide a clear understanding of who and why makes queries to the Datahub and how the queried data is intended to be used 
 * to be technically able to separate specific actions by the market participants
 
-### Update: April 2023
+## Update: April 2023
 
 We have added for comments new interface descritpions:
 - agreementCoordination-v2
