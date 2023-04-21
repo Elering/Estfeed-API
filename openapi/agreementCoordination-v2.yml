@@ -1,0 +1,787 @@
+openapi: 3.0.3
+info:
+  title: Agreement coordination
+  version: 0.1.0
+  description: API to create, read, and update agreement coordination.
+tags:
+  - name: Agreement coordination
+    description: API to create, read, and update agreement coordination.
+paths:
+  /api/v1/agreement-coordination/search:
+    post:
+      tags:
+        - Agreement coordination
+      operationId: find-agreement-coordination
+      summary: Find agreement coordination result
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementCoordinationAttributes:
+                    $ref: '#/components/schemas/agreementCoordinationAttributes'
+                required:
+                  - marketParticipantContext
+                  - agreementCoordinationAttributes
+      description: >-
+                   Submit the agreement coordination attributes to find the result      
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/agreementCoordinationResult'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/agreement-coordination:
+    post:
+      tags:
+        - Agreement coordination
+      operationId: request-agreement-coordination
+      summary: Create an agreement coordination request
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementCoordinationRequest:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/agreementCoordinationRequest'
+                required:
+                  - marketParticipantContext
+                  - agreementCoordinationRequest
+        description: >-
+                     Submit the agreement coordiantion object to start the process
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+    put:
+      tags:
+        - Agreement coordination
+      operationId: update-agreement-coordination
+      summary: Update agreement coordination
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementCoordinationRequestChange:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/agreementCoordinationRequestChange'
+                required:
+                  - marketParticipantContext
+                  - agreementCoordinationRequestChange
+        description: >-
+                     Submit the agreement coordination object to update the content
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/agreement-coordination/response:
+    post:
+      tags:
+        - Agreement coordination
+      operationId: request-agreement-coordination-response
+      summary: Create an agreement coordination response
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementCoordinationResponse:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/agreementCoordinationResponse'
+                required:
+                  - marketParticipantContext
+                  - agreementCoordinationResponse
+        description: >-
+                     Submit the agreement coordiantion response object to close the process
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+    put:
+      tags:
+        - Agreement coordination
+      operationId: update-agreement-coordination-response
+      summary: Update agreement coordination response
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  agreementCoordinationResponseChange:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/agreementCoordinationResponseChange'
+                required:
+                  - marketParticipantContext
+                  - agreementCoordinationResponseChange
+        description: >-
+                     Submit the agreement coordination response object to update the content
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>        
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    date:
+      type: string
+      format: date
+      description: ISO 8601 date
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+                \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    agreementType:
+      type: string
+      description: Agreement type
+      enum: [SUPPLY, AGGREGATION]
+    resultType:
+      type: string
+      enum: [SUCCESSFUL, UNSUCCESSFUL]
+    comment:
+      type: string
+      maxLength: 2000
+    decisionType:
+      type: string
+      enum: [ACCEPT, DENY]
+    actionType: 
+      type: string
+      enum: [ADD_AGREEMENT, UPDATE_AGREEMENT, CANCEL_REQUEST]
+    agreementCoordinationAttributes:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        agreementId:
+          type: string
+          maxLength: 50
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+          type: boolean
+        dateStart:
+          $ref: '#/components/schemas/date'
+        dateEnd:
+          $ref: '#/components/schemas/date'
+        requestAction:
+          $ref: '#/components/schemas/actionType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+        requestPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        requestPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+        responseDecision:
+          $ref: '#/components/schemas/decisionType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+        responsePeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        responsePeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+        result:
+          $ref: '#/components/schemas/resultType'
+    agreementCoordinationRequest:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        agreementId:
+          type: string
+          maxLength: 50
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+         type: boolean
+        dateStart:
+          $ref: '#/components/schemas/date'
+        dateEnd:
+          $ref: '#/components/schemas/date'
+        requestAction:
+          $ref: '#/components/schemas/actionType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - agreementCoordinationRequestId
+        - meterEic
+        - agreementType
+        - customerEic
+        - dateStart
+        - requestAction
+    agreementCoordinationRequestChange:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        agreementId:
+          type: string
+          maxLength: 50
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+         type: boolean
+        dateStart:
+          $ref: '#/components/schemas/date'
+        dateEnd:
+          $ref: '#/components/schemas/date'
+        requestAction:
+          $ref: '#/components/schemas/actionType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - agreementCoordinationRequestId
+    agreementCoordinationResponse:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        responseDecision:
+          $ref: '#/components/schemas/decisionType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - agreementCoordinationRequestId
+        - responseDecision
+    agreementCoordinationResponseChange:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        responseDecision:
+          $ref: '#/components/schemas/decisionType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - agreementCoordinationRequestId
+    agreementCoordinationResult:
+      type: object
+      properties:
+        agreementCoordinationRequestId:
+          $ref: '#/components/schemas/agreementCoordinationRequestId'
+        agreementId:
+          type: string
+          maxLength: 50
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+          type: boolean
+        dateStart:
+          $ref: '#/components/schemas/date'
+        dateEnd:
+          $ref: '#/components/schemas/date'
+        requestAction:
+          $ref: '#/components/schemas/actionType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+        requestTimestamp:
+          $ref: '#/components/schemas/dateTime'
+        responseDecision:
+          $ref: '#/components/schemas/decisionType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+        responseTimestamp:
+          $ref: '#/components/schemas/dateTime'
+        result:
+          $ref: '#/components/schemas/resultType'
+      required:
+        - agreementCoordinationRequestId
+        - agreementId
+        - meterEic
+        - agreementType
+        - customerEic
+        - preliminaryTerminationFee
+        - dateStart
+        - dateEnd
+        - requestAction
+        - responseDecision
+        - requestTimestamp
+        - result
+    agreementCoordinationRequestId:
+      type: object
+      properties:
+        requestId:
+          $ref: '#/components/schemas/uniqueId'
+        senderEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - requestId
+        - senderEic
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+  responses:
+    badRequest:
+      description: Bad Request
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+    forbidden:
+      description: Forbidden
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+    notFound:
+      description: Not found
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+    unprocessableEntity:
+      description: Unprocessable entity
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unprocessableEntity'
+servers:
+  - url: https://test-newavp.elering.ee
+security:
+  - JWTAuth: []

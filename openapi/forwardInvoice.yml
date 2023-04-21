@@ -1,0 +1,621 @@
+openapi: 3.0.3
+info:
+  title: Forward invoice
+  version: 0.1.0
+  description: API to create and read invoices forwarded via the Datahub.
+tags:
+  - name: Forward invoice
+    description: API to create and read invoices forwarded via the Datahub.
+paths:
+  /api/v1/forward-invoice/search:
+    post:
+      tags:
+        - Forward invoice
+      operationId: find-forward-invoice
+      summary: Find a forwarded invoice
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  forwardInvoiceAttributes:
+                    $ref: '#/components/schemas/forwardInvoiceAttributes'
+                required:
+                  - marketParticipantContext
+                  - forwardInvoiceAttributes
+      description: >-
+                   Submit the invoice attributes to find the list of invoices     
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: '#/components/schemas/forwardInvoiceList'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/forward-invoice/download:
+    post:
+      tags:
+        - Forward invoice
+      operationId: download-forward-invoice
+      summary: Download a forwarded invoice
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  forwardInvoiceId:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/forwardInvoiceId'
+                required:
+                  - marketParticipantContext
+                  - forwardInvoiceId
+      description: >-
+                   Submit the invoice IDs to download the invoices   
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/gzip:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: '#/components/schemas/invoice'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'  
+  /api/v1/forward-invoice:
+    post:
+      tags:
+        - Forward invoice
+      operationId: request-forward-invoice
+      summary: Create a forwarded invoice
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  forwardInvoice:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/forwardInvoice'
+                required:
+                  - marketParticipantContext
+                  - forwardInvoice
+            encoding:
+              marketParticipantContext:
+                contentType: application/json
+              documents:
+                contentType: application/gzip
+        description: >-
+                     Submit the invoice object to hand over the invoice
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/forward-invoice/delete:
+    post:
+      tags:
+        - Forward invoice
+      operationId: delete-forward-invoice
+      summary: Delete a forwarded invoice
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  forwardInvoiceId:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/forwardInvoiceId'
+                required:
+                  - marketParticipantContext
+                  - forwardInvoiceId
+      description: >-
+                   Submit the invoice IDs to delete the invoices   
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>        
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+                \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    invoice:
+      type: string
+      format: base64
+    forwardInvoiceAttributes:
+      type: object
+      properties:
+        forwardInvoiceId:
+          $ref: '#/components/schemas/forwardInvoiceId'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        dataPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        dataPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+        unread:
+          type: boolean
+    forwardInvoiceList:
+      type: object
+      properties:
+        forwardInvoiceId:
+          $ref: '#/components/schemas/forwardInvoiceId'
+        timestamp:
+          $ref: '#/components/schemas/dateTime'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        dataPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        dataPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+        unread:
+          type: boolean
+      required:
+        - invoiceId
+        - timestamp
+        - senderEic
+        - receiverEic
+        - customerEic
+        - meterEic
+        - dataPeriodStart
+        - dataPeriodEnd
+        - unread
+    forwardInvoiceHeaders:
+      type: object
+      properties:
+        forwardInvoiceId:
+          $ref: '#/components/schemas/forwardInvoiceId'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        dataPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        dataPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - forwardInvoiceId
+        - receiverEic
+        - customerEic
+        - meterEic
+        - dataPeriodStart
+        - dataPeriodEnd
+    forwardInvoice:
+      type: object
+      properties:
+        forwardInvoiceHeaders:
+          $ref: '#/components/schemas/forwardInvoiceHeaders'
+        invoice:
+          $ref: '#/components/schemas/invoice'
+      required:
+        - forwardInvoiceHeaders
+        - invoice
+    forwardInvoiceId:
+      type: object
+      properties:
+        invoiceId:
+          $ref: '#/components/schemas/uniqueId'
+        senderEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - invoiceId
+        - senderEic
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ELECTRICITY, NATURAL_GAS]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+  responses:
+    badRequest:
+      description: Bad Request
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+    forbidden:
+      description: Forbidden
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+    notFound:
+      description: Not found
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+    unprocessableEntity:
+      description: Unprocessable entity
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unprocessableEntity'
+servers:
+  - url: https://test-newavp.elering.ee
+security:
+  - JWTAuth: []

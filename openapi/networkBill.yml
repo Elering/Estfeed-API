@@ -1,0 +1,666 @@
+openapi: 3.0.3
+info:
+  title: Network bill
+  version: 0.1.0
+  description: API to create, read, and update network bill data.
+tags:
+  - name: Network bill
+    description: API to create, read, and update network bill data.
+paths:
+  /api/v1/network-bill/search:
+    post:
+      tags:
+        - Network bill
+      operationId: find-network-bill-data
+      summary: Find network bill data by meter EIC, period, and optionally billing sequence
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterAttributes:
+                  $ref: '#/components/schemas/meterAttributes'
+              required:
+                - marketParticipantContext
+                - meterAttributes
+      description: >-
+        Submit the meter identifications, timeframe, and the purpose to receive the meter reading data
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/networkBillTimeSeries'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/network-bill:
+    post:
+      tags:
+        - Network bill
+      operationId: request-network-bill-data
+      summary: Create network bill data
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                networkBillTimeSeries:
+                  type: array
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/networkBillTimeSeries'
+              required:
+                - marketParticipantContext
+                - networkBillTimeSeries
+        description: >-
+          Submit the network bill data object to create the meter report
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/meterDataCommonResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+    put:
+      tags:
+        - Network bill
+      operationId: update-network-bill-data
+      summary: Update network bill data
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                networkBillTimeSeries:
+                  type: array
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/networkBillTimeSeries'
+              required:
+                - marketParticipantContext
+                - networkBillTimeSeries
+        description: >-
+          Submit the network bill data object to update the meter report
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/meterDataCommonResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/network-bill/status:
+    post:
+      tags:
+        - Network bill
+      operationId: find-network-bill-data-status
+      summary: Find network bill data processing status by document and issuer identification
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                documentInfo:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    properties:
+                      originalDocumentIdentification:
+                        $ref: '#/components/schemas/uniqueId'
+                      senderEic:
+                        $ref: '#/components/schemas/eic'
+                    required:
+                      - originalDocumentIdentification
+                      - senderEic
+              required:
+                - marketParticipantContext
+                - documentInfo
+      description: >-
+        Submit the sender and document identification to receive the processing status
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/status'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    status:
+      type: object
+      properties:
+        originalDocumentIdentification:
+          $ref: '#/components/schemas/uniqueId'
+        statusCode:
+          $ref: '#/components/schemas/statusCode'
+        reasonText:
+          type: string
+          description: Textual reason of the response
+    networkBillTimeSeries:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        networkBillPeriod:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/networkBillPeriod'
+      required:
+        - meterEic
+        - period
+    networkBillPeriod:
+      type: object
+      properties:
+        calculationTimestamp:
+          $ref: '#/components/schemas/dateTime'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+        billingSequence:
+          type: integer
+        containsCalculatedValues:
+          type: boolean
+        measurement:
+          type: array
+          items:
+            $ref: '#/components/schemas/networkBillmeasurement'
+      required:
+        - calculationTimestamp
+        - periodStart
+        - periodEnd
+        - billingSequence
+        - containsCalculatedValues
+        - measurement
+    networkBillmeasurement:
+      type: object
+      description: Measurement result
+      properties:
+        measurementUnit:
+          type: string
+          enum: [KWH, M3]
+        outDay:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        outNight:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        outTotal:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        inDay:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        inNight:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        inTotal:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+      required:
+        - measurementUnit
+      anyOf:
+        - required: [outDay]
+        - required: [outNight]
+        - required: [outTotal]
+        - required: [inDay]
+        - required: [inNight]
+        - required: [inTotal]
+    meterAttributes:
+      type: object
+      description: Attributes to request meter readings
+      properties:
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - serviceProviderEic
+        - meterEic
+        - periodStart
+        - periodEnd
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          type: string
+          maxLength: 50
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          type: string
+          enum: [ ELECTRICITY, NATURAL_GAS ]
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    meterDataCommonResponse:
+      type: object
+      description: Common meter data metadata
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - meterEic
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+  headers:
+    status:
+      deprecated: false
+      required: false
+      schema:
+        $ref: '#/components/schemas/statusCode'
+    x-document-date-time:
+      deprecated: false
+      required: true
+      schema:
+        $ref: '#/components/schemas/dateTime'
+    x-document-identification:
+      deprecated: false
+      required: true
+      schema:
+        $ref: '#/components/schemas/uniqueId'
+    x-original-document-identification:
+      deprecated: false
+      required: false
+      schema:
+        $ref: '#/components/schemas/uniqueId'
+  responses:
+    badRequest:
+      description: Bad Request
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+    forbidden:
+      description: Forbidden
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+    notFound:
+      description: Not found
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+    unprocessableEntity:
+      description: Unprocessable entity
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unprocessableEntity'
+servers:
+  - url: https://test-newavp.elering.ee
+security:
+  - JWTAuth: [ ]
