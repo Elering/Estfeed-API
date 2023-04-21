@@ -15,3 +15,32 @@ Each API includes marketParticipantContext with the following elements:
 Reasons for including this information with each API:
 * to provide a clear understanding of who and why makes queries to the Datahub and how the queried data is intended to be used 
 * to be technically able to separate specific actions by the market participants
+
+### Update: April 2023
+
+We have added for comments new interface descritpions:
+- agreementCoordination-v2
+- balanceState
+- connectionState-v2 
+- directMessage
+- forwardInvoice
+- networkBill
+
+## Interface status
+
+| Service                    | Status                                   |     |
+|----------------------------|------------------------------------------|-----|
+| agreementCoordination-v2   | rfc                                      |     |
+| agreements                 | db: search, export<br/>mock: others<br/> |     |
+| balanceState               | rfc                                      |     |
+| connectionState-v2         | rfc                                      |     |
+| customerEic                | mock                                     |     |
+| directMessage              | rfc                                      |     |
+| eic                        | mock                                     |     |
+| forwardInvoice             | rfc                                      |     |
+| gridagreementmeteringpoint | mock                                     |     |
+| meteringData               | mock                                     |     |
+| meteringPoint              | db: search<br/> mock: others<br/>        |     |
+| networkBill                | rfc                                      |     |
+
+
