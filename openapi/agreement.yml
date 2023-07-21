@@ -412,6 +412,8 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 updatePeriodStart:
                   $ref: '#/components/schemas/dateTime'
+                agreementType:
+                  $ref: '#/components/schemas/agreementType'
               required:
                 - marketParticipantContext
                 - updatePeriodStart

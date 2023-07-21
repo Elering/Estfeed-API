@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Joint invoice
-  version: 0.2.0
+  version: 0.3.0
   description: API to create and read invoices forwarded via the Datahub.
 tags:
   - name: Joint invoice
@@ -234,7 +234,75 @@ paths:
           $ref: '#/components/responses/forbidden'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/forward-invoice/delete:
+    put:
+      tags:
+        - Joint invoice
+      operationId: update-joint-invoice
+      summary: Update a forwarded invoice
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                jointInvoice:
+                  $ref: '#/components/schemas/jointInvoiceUpdate'
+              required:
+                - marketParticipantContext
+                - jointInvoiceUpdate
+        description: >-
+          Submit the invoice object to update an existing invoice
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/joint-invoice/delete:
     post:
       tags:
         - Joint invoice
@@ -301,7 +369,7 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/forward-invoice/change:
+  /api/v1/joint-invoice/change:
     post:
       tags:
         - Joint invoice
@@ -494,7 +562,6 @@ components:
         dataPeriodEnd:
           $ref: '#/components/schemas/dateTime'
       required:
-        - invoiceId
         - senderEic
         - receiverEic
         - customerEic
@@ -504,13 +571,49 @@ components:
     jointInvoice:
       type: object
       properties:
-        forwardInvoiceHeaders:
+        jointInvoiceHeaders:
           $ref: '#/components/schemas/jointInvoiceHeaders'
         invoice:
           type: string
           format: binary
       required:
-        - forwardInvoiceHeaders
+        - jointInvoiceHeaders
+        - invoice
+    jointInvoiceHeadersUpdate:
+      type: object
+      properties:
+        invoiceId:
+          $ref: '#/components/schemas/uniqueId'
+        senderEic:
+          $ref: '#/components/schemas/eic'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        dataPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        dataPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - invoiceId
+        - senderEic
+        - receiverEic
+        - customerEic
+        - meterEic
+        - dataPeriodStart
+        - dataPeriodEnd
+    jointInvoiceUpdate:
+      type: object
+      properties:
+        jointInvoiceHeadersUpdate:
+          $ref: '#/components/schemas/jointInvoiceHeadersUpdate'
+        invoice:
+          type: string
+          format: binary
+      required:
+        - jointInvoiceHeaders
         - invoice
     marketParticipantContext:
       type: object
