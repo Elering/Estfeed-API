@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Network bill
-  version: 0.1.0
+  version: 0.2.0
   description: API to create, read, and update network bill data.
 tags:
   - name: Network bill
@@ -39,9 +39,12 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterAttributes:
                   $ref: '#/components/schemas/meterAttributes'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
                 - meterAttributes
+                - pagination
       description: >-
         Submit the meter identifications, timeframe, and the purpose to receive the meter reading data
       responses:
@@ -67,9 +70,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/networkBillTimeSeries'
+                type: object
+                properties:
+                  networkBillTimeSeries:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/networkBillTimeSeries'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - networkBillTimeSeries
+                  - pagination
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -85,7 +97,7 @@ paths:
       tags:
         - Network bill
       operationId: request-network-bill-data
-      summary: Create network bill data
+      summary: Create or update network bill data
       security:
         - JWTAuth: [ ]
       parameters:
@@ -111,15 +123,12 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 networkBillTimeSeries:
-                  type: array
-                  minItems: 1
-                  items:
-                    $ref: '#/components/schemas/networkBillTimeSeries'
+                  $ref: '#/components/schemas/networkBillTimeSeries'
               required:
                 - marketParticipantContext
                 - networkBillTimeSeries
         description: >-
-          Submit the network bill data object to create the meter report
+          Submit the network bill data object to create or update the meter report
       responses:
         '201':
           description: Created
@@ -143,9 +152,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/meterDataCommonResponse'
+                $ref: '#/components/schemas/meterDataCommonResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -154,87 +161,12 @@ paths:
           $ref: '#/components/responses/forbidden'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-    put:
-      tags:
-        - Network bill
-      operationId: update-network-bill-data
-      summary: Update network bill data
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                networkBillTimeSeries:
-                  type: array
-                  minItems: 1
-                  items:
-                    $ref: '#/components/schemas/networkBillTimeSeries'
-              required:
-                - marketParticipantContext
-                - networkBillTimeSeries
-        description: >-
-          Submit the network bill data object to update the meter report
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/meterDataCommonResponse'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/network-bill/status:
+  /api/v1/network-bill/change:
     post:
       tags:
         - Network bill
-      operationId: find-network-bill-data-status
-      summary: Find network bill data processing status by document and issuer identification
+      operationId: find-network-bill-data-change
+      summary: Find metering points where data was changed within the defined period
       security:
         - JWTAuth: [ ]
       parameters:
@@ -259,24 +191,16 @@ paths:
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
-                documentInfo:
-                  type: array
-                  minItems: 1
-                  items:
-                    type: object
-                    properties:
-                      originalDocumentIdentification:
-                        $ref: '#/components/schemas/uniqueId'
-                      senderEic:
-                        $ref: '#/components/schemas/eic'
-                    required:
-                      - originalDocumentIdentification
-                      - senderEic
+                updatePeriodStart:
+                  $ref: '#/components/schemas/dateTime'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
-                - documentInfo
+                - updatePeriodStart
+                - pagination
       description: >-
-        Submit the sender and document identification to receive the processing status
+        Submit the modification period to receive a list of metering points where data has changed during the marked time interval
       responses:
         '200':
           description: OK
@@ -300,9 +224,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/status'
+                type: object
+                properties:
+                  networkBillTimeSeries:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/networkBillTimeSeries'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - networkBillTimeSeries
+                  - pagination
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -345,29 +278,22 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    status:
-      type: object
-      properties:
-        originalDocumentIdentification:
-          $ref: '#/components/schemas/uniqueId'
-        statusCode:
-          $ref: '#/components/schemas/statusCode'
-        reasonText:
-          type: string
-          description: Textual reason of the response
+    marketParticipantRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    commodityType:
+      type: string
+      enum: [ELECTRICITY, NATURAL_GAS]
     networkBillTimeSeries:
       type: object
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
         networkBillPeriod:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/networkBillPeriod'
+          $ref: '#/components/schemas/networkBillPeriod'
       required:
         - meterEic
-        - period
+        - networkBillPeriod
     networkBillPeriod:
       type: object
       properties:
@@ -377,8 +303,6 @@ components:
           $ref: '#/components/schemas/dateTime'
         periodEnd:
           $ref: '#/components/schemas/dateTime'
-        billingSequence:
-          type: integer
         containsCalculatedValues:
           type: boolean
         measurement:
@@ -389,7 +313,6 @@ components:
         - calculationTimestamp
         - periodStart
         - periodEnd
-        - billingSequence
         - containsCalculatedValues
         - measurement
     networkBillmeasurement:
@@ -463,14 +386,12 @@ components:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/marketParticipantRole'
         purpose:
           type: string
           maxLength: 50
         commodityType:
-          type: string
-          enum: [ ELECTRICITY, NATURAL_GAS ]
+          $ref: '#/components/schemas/commodityType'
       required:
         - marketParticipantIdentification
         - marketParticipantRole
@@ -483,6 +404,29 @@ components:
           $ref: '#/components/schemas/eic'
       required:
         - meterEic
+    pagingRequest:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - page
+        - pageSize
+    pagingResponse:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 1
     badRequest:
       type: object
       description: Bad Request
@@ -661,6 +605,6 @@ components:
           schema:
             $ref: '#/components/schemas/unprocessableEntity'
 servers:
-  - url: https://test-newavp.elering.ee
+  - url: https://test-datahub.elering.ee
 security:
   - JWTAuth: [ ]

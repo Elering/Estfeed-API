@@ -1,0 +1,43 @@
+openapi: 3.0.3
+info:
+  title: Preload
+  version: 0.1.0
+tags:
+  - name: Preload
+    description: API to get preload data
+paths:
+  /api/public/preload:
+    get:
+      tags:
+        - Preload
+      operationId: get-preload
+      summary: Get preload data
+      security:
+        - JWTAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/preloadData'
+components:
+  schemas:
+    preloadData:
+      type: object
+      properties:
+        version:
+          type: string
+        serverTime:
+          type: string
+        buildTime:
+          type: string
+          format: date-time
+          description: ISO 8601 zone datetime
+        zoneId:
+          type: string
+      required:
+        - version
+        - serverTime
+        - buildTime
+        - zoneId

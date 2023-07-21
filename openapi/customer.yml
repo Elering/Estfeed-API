@@ -1,41 +1,49 @@
 openapi: 3.0.3
 info:
-  title: agreements
-  version: 0.1.0
-  description: API to create, read, and update agreements.
+  title: Customer
+  version: 0.3.0
+  description: API to create, read, and update customer information.
+tags:
+  - name: Customer
+    description: API to create, read, and update customer information.
 paths:
-  /api/v1/agreements/search:
+  /api/v1/customer/search:
     post:
-      operationId: find-agreement
-      summary: Find agreements by type and metering point, and optionally period
+      tags:
+        - Customer
+      operationId: get-customer
+      summary: Find a customer by identity
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-                type: object
-                properties:
-                  marketParticipantContext:
-                    $ref: '#/components/schemas/marketParticipantContext'
-                  agreementAttributes:
-                    $ref: '#/components/schemas/agreementAttributes'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                identity:
+                  $ref: '#/components/schemas/identity'
+              required:
+                - marketParticipantContext
+                - identity
       description: >-
-        Submit at least of the customer identification or meter identification or agreement ID to receive the agreement details, with optional filtering using the period or agreement type
+        Submit the customer identity to receive other identities, metadata, and persmissions granted by the customer.
       responses:
         '200':
           description: OK
@@ -43,25 +51,23 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/agreementResponse'
+                $ref: '#/components/schemas/customer'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -72,40 +78,43 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/agreements:
+  /api/v1/customer:
     post:
-      operationId: request-agreement
-      summary: Create an agreement
+      tags:
+        - Customer
+      operationId: request-customer
+      summary: Create customer with metadata
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-                type: object
-                properties:
-                  marketParticipantContext:
-                    $ref: '#/components/schemas/marketParticipantContext'
-                  agreement:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/agreement'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customer:
+                  $ref: '#/components/schemas/customer'
+              required:
+                - marketParticipantContext
+                - customer
         description: >-
-          Submit the agreements object to create agreement
+          Submit the customer object to create the customer identity and their metadata.
       responses:
         '201':
           description: Created
@@ -113,26 +122,23 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-                  maxLength: 50
+                $ref: '#/components/schemas/identity'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -142,115 +148,110 @@ paths:
         "422":
           $ref: '#/components/responses/unprocessableEntity'
     put:
-      operationId: update-agreement
-      summary: Update agreements
+      tags:
+        - Customer
+      operationId: update-customer
+      summary: Update customer with metadata
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-                type: object
-                properties:
-                  marketParticipantContext:
-                    $ref: '#/components/schemas/marketParticipantContext'
-                  agreementChange:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/agreementChange'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customer:
+                  $ref: '#/components/schemas/customer'
+              required:
+                - marketParticipantContext
+                - customer
         description: >-
-          Submit the agreements object with their IDs to update agreements
+          Submit the customer object to update the customer identity and their metadata.
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
           headers:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-                  maxLength: 50
+                $ref: '#/components/schemas/identity'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
           $ref: '#/components/responses/unauthorized'
         "403":
           $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/agreements/delete:
+  /api/v1/customer/change:
     post:
-      operationId: delete-agreement
-      summary: Delete agreement by submitting an identical request
+      tags:
+        - Customer
+      operationId: get-customer-changes
+      summary: Find changes in customer identity or metadata since a given point in time
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-                type: object
-                properties:
-                  senderContext:
-                    $ref: '#/components/schemas/marketParticipantContext'
-                  agreementDelete:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        agreementId:
-                          type: string
-                          maxLength: 50
-                        serviceProviderEic:
-                          $ref: '#/components/schemas/eic'
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                updatePeriodStart:
+                  $ref: '#/components/schemas/dateTime'
+              required:
+                - marketParticipantContext
+                - updatePeriodStart
       description: >-
-        Submit the agreement ID to delete the identified object
+        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive periodic changes of customer identity or metadata.
       responses:
         '200':
           description: OK
@@ -258,26 +259,23 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-                  maxLength: 50
+                $ref: '#/components/schemas/customer'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -300,27 +298,12 @@ components:
   schemas:
     dateTime:
       type: string
-      format: datetime
+      format: date-time
       description: ISO 8601 zone datetime
-      # RegEx to verify the yyyy-MM-ddTHH:mm:ssZ format
-      pattern: >-
-        [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?
-    date:
-      type: string
-      format: date
-      description: ISO 8601 date
-      # RegEx to verify the yyyy-MM-dd format
-      pattern: >-
-        [0-9]{4}-[0-9]{2}-[0-9]{2}
     uniqueId:
       type: string
       format: uuid
       description: UUID
-      minLength: 36
-      maxLength: 36
-      # RegEx to verify the UUID format
-      pattern: >-
-        ^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$
     statusCode:
       type: integer
       description: HTTP status code
@@ -335,126 +318,88 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    agreementType:
+    metadataType:
       type: string
-      description: Agreement type 
-      enum: [GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE]
-    agreement:
+      enum: [FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL]
+    extensionType:
+      type: string
+      enum: [COUNTRY, ISSUER]
+    customerType:
+      type: string
+      enum: [PHYSICAL_PERSON, LEGAL_PERSON, ORGANIZATION]
+    identityType:
+      type: string
+      enum: [EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID]
+    marketParticipantRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    commodityType:
+      type: string
+      enum: [ELECTRICITY, NATURAL_GAS]
+    customer:
       type: object
+      description: Customer object with identites and metadata
       properties:
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          $ref: '#/components/schemas/agreementType'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        preliminaryTerminationFee:
-         type: boolean
-        dateStart:
-          $ref: '#/components/schemas/date'
-        datedEnd:
-          $ref: '#/components/schemas/date'
+        identities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/identity'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/customerMetadata'
       required:
-        - meterEic
-        - agreementType
-        - serviceProviderEic
-        - customerEic
-        - dateStart
-        - datedEnd
-    agreementResponse:
+        - identities
+    identity:
       type: object
+      description: Identity block
       properties:
-        agreementId:
+        customerType:
+          $ref: '#/components/schemas/customerType'
+        identityType:
+          $ref: '#/components/schemas/identityType'
+        identityValue:
           type: string
           maxLength: 50
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          $ref: '#/components/schemas/agreementType'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        preliminaryTerminationFee:
-         type: boolean
-        dateStart:
-          $ref: '#/components/schemas/date'
-        dateEnd:
-          $ref: '#/components/schemas/date'
-        version:
-          type: integer
-          minimum: 1
-      required:
-        - agreementId
-        - meterEic
-        - agreementType
-        - serviceProviderEic
-        - customerEic
-        - dateStart
-        - dateEnd
-    agreementChange:
+        identityExtension:
+          type: array
+          items:
+            $ref: '#/components/schemas/identityExtension'
+    identityExtension:
       type: object
       properties:
-        agreementId:
+        extensionType:
+          $ref: '#/components/schemas/extensionType'
+        extensionValue:
           type: string
-          maxLength: 50
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          $ref: '#/components/schemas/agreementType'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        preliminaryTerminationFee:
-         type: boolean
-        dateStart:
-          $ref: '#/components/schemas/date'
-        dateEnd:
-          $ref: '#/components/schemas/date'
+          maxLength: 250
       required:
-        - agreementId
-    agreementAttributes:
+        - extensionType
+        - extensionValue
+    customerMetadata:
       type: object
       properties:
-        agreementId:
+        metadataType:
+          $ref: '#/components/schemas/metadataType'
+        metadataValue:
           type: string
-          maxLength: 50
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          $ref: '#/components/schemas/agreementType'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        preliminaryTerminationFee:
-         type: boolean
-        dateStart:
-          $ref: '#/components/schemas/date'
-        dateEnd:
-          $ref: '#/components/schemas/date'
-      anyOf:
-        - required: [agreementId]
-        - required: [meterEic]
-        - required: [customerEic]
-        - required: [serviceProviderEic]
+          maxLength: 250
+      required:
+        - metadataType
+        - metadataValue
     marketParticipantContext:
       type: object
       properties:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/marketParticipantRole'
         purpose:
           type: string
           maxLength: 50
         commodityType:
-          type: string
-          enum: [ELECTRICITY, NATURAL_GAS]
+          $ref: '#/components/schemas/commodityType'
       required:
         - marketParticipantIdentification
         - marketParticipantRole
@@ -499,27 +444,6 @@ components:
           type: string
         cause:
           $ref: '#/components/schemas/defaultProblem'
-  headers:
-    status:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/statusCode'
-    x-document-date-time:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/dateTime'
-    x-document-identification:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/uniqueId'
-    x-original-document-identification:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/uniqueId'
   responses:
     badRequest:
       description: Bad Request
@@ -527,19 +451,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -550,19 +474,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -573,19 +497,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -596,19 +520,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -619,24 +543,24 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/unprocessableEntity'
 servers:
-  - url: https://test-newavp.elering.ee
+  - url: https://test-datahub.elering.ee
 security:
-  - JWTAuth: []
+  - JWTAuth: [ ]

@@ -1,0 +1,800 @@
+openapi: 3.0.3
+info:
+  title: Direct messages
+  version: 0.2.0
+  description: API to create, read, and update direct messages.
+tags:
+  - name: Direct message
+    description: API to create, read, and update direct messages.
+paths:
+  /api/v1/direct-messages/search:
+    post:
+      tags:
+        - Direct message
+      operationId: find-direct-messages
+      summary: Find direct messages
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  directMessageAttributes:
+                    $ref: '#/components/schemas/directMessageAttributes'
+                required:
+                  - marketParticipantContext
+                  - directMessageAttributes
+      description: >-
+        Submit the direct message attributes to find the result      
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/directMessageResult'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/direct-messages:
+    post:
+      tags:
+        - Direct message
+      operationId: request-direct-message
+      summary: Create a direct message
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  directMessageRequest:
+                    items:
+                      $ref: '#/components/schemas/directMessageRequest'
+                required:
+                  - marketParticipantContext
+                  - directMessageRequest
+        description: >-
+          Submit the direct message object to start the process
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/direct-messages/{messageRequestId}:
+    put:
+      tags:
+        - Direct message
+      operationId: update-direct-message
+      summary: Update connection state
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        - in: path
+          name: messageRequestId
+          description: Unique ID of the message request
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  directMessageRequestChange:
+                    $ref: '#/components/schemas/directMessageRequestChange'
+                required:
+                  - marketParticipantContext
+                  - directMessageRequestChange
+        description: >-
+          Submit the direct message object to update the content
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/direct-message/{messageRequestId}/response:
+    post:
+      tags:
+        - Direct message
+      operationId: request-direct-message-response
+      summary: Create a direct message response
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        - in: path
+          name: messageRequestId
+          description: Unique ID of the message request
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  directMessageResponse:
+                    $ref: '#/components/schemas/directMessageResponse'
+                required:
+                  - marketParticipantContext
+                  - directMessageResponse
+        description: >-
+          Submit the direct message response object to close the process
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/direct-message/{messageRequestId}/response/{messageResponseId}:
+    put:
+      tags:
+        - Direct message
+      operationId: update-direct-message-response
+      summary: Update direct message response
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        - in: path
+          name: messageRequestId
+          description: Unique ID of the message request
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        - in: path
+          name: messageResponseId
+          description: Unique ID of the message response
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  directMessageResponseChange:
+                    $ref: '#/components/schemas/directMessageResponseChange'
+                required:
+                  - marketParticipantContext
+                  - directMessageResponseChange
+        description: >-
+          Submit the direct message response object to update the content
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/direct-messages/change:
+    post:
+      tags:
+        - Direct message
+      operationId: find-direct-messages-change
+      summary: Find direct messages changes
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  marketParticipantContext:
+                    $ref: '#/components/schemas/marketParticipantContext'
+                  updatePeriodStart:
+                    $ref: '#/components/schemas/dateTime'
+                required:
+                  - marketParticipantContext
+                  - updatePeriodStart
+      description: >-
+        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive periodic changes of direct messages.   
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/directMessageResult'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>        
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+                \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    comment:
+      type: string
+      maxLength: 4000
+    topicType:
+      type: string
+      enum: [DATA, INVOICE]
+    requestStatusType:
+      type: string
+      enum: [OPEN, CLOSE, CANCEL]
+    marketParticipantRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    commodityType:
+      type: string
+      enum: [ELECTRICITY, NATURAL_GAS]
+    directMessageAttributes:
+      type: object
+      properties:
+        messageRequestId:
+          $ref: '#/components/schemas/uniqueId'
+        messageResponseId:
+          $ref: '#/components/schemas/uniqueId'
+        senderEic:
+          $ref: '#/components/schemas/eic'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        topic:
+          $ref: '#/components/schemas/topicType'
+        reference:
+          $ref: '#/components/schemas/reference'
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+    directMessageRequest:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        topic:
+          $ref: '#/components/schemas/topicType'
+        reference:
+          $ref: '#/components/schemas/reference'
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - meterEic
+        - customerEic
+        - topic
+        - requestStatus
+    directMessageRequestChange:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        topic:
+          $ref: '#/components/schemas/topicType'
+        reference:
+          $ref: '#/components/schemas/reference'
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+    directMessageResponse:
+      type: object
+      properties:
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - requestStatus
+    directMessageResponseChange:
+      type: object
+      properties:
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+    directMessageResult:
+      type: object
+      properties:
+        messageRequestId:
+          $ref: '#/components/schemas/uniqueId'
+        messageResponseId:
+          $ref: '#/components/schemas/uniqueId'
+        timestamp:
+          $ref: '#/components/schemas/dateTime'
+        senderEic:
+          $ref: '#/components/schemas/eic'
+        receiverEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        topic:
+          $ref: '#/components/schemas/topicType'
+        reference:
+          $ref: '#/components/schemas/reference'
+        requestStatus:
+          $ref: '#/components/schemas/requestStatusType'
+        requestComment:
+          $ref: '#/components/schemas/comment'
+        responseComment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - messageRequestIdentification
+        - senderEic
+        - receiverEic
+        - meterEic
+        - customerEic
+        - topic
+        - reference
+        - requestStatus
+    reference:
+      type: object
+      properties:
+        referenceType:
+          type: string
+          enum: [INVOICE]
+        referenceValue:
+          type: string
+          minLength: 1
+          maxLength: 16
+      required:
+        - referenceType
+        - referenceValue
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          $ref: '#/components/schemas/marketParticipantRole'
+        purpose:
+          type: string
+          maxLength: 50
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+  responses:
+    badRequest:
+      description: Bad Request
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+    forbidden:
+      description: Forbidden
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+    notFound:
+      description: Not found
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+    unprocessableEntity:
+      description: Unprocessable entity
+      headers:
+        status:
+          description: HTTP status code
+          schema:
+            $ref: '#/components/schemas/statusCode'
+        x-document-date-time:
+          description: Document creation timestamp
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        x-document-identification:
+          description: Document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+        x-original-document-identification:
+          description: Request document unique identification
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unprocessableEntity'
+servers:
+  - url: https://test-datahub.elering.ee
+security:
+  - JWTAuth: []

@@ -1,28 +1,33 @@
 openapi: 3.0.3
 info:
-  title: meteringPoint
-  version: 0.1.0
+  title: MeteringPoint
+  version: 0.3.0
   description: API to create, read, and update meter information.
+tags:
+  - name: MeteringPoint
+    description: API to create, read, and update agreements.
 paths:
   /api/v1/meter/search:
     post:
+      tags:
+        - MeteringPoint
       operationId: find-meter
       summary: Find a meter by attributes
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
@@ -34,8 +39,15 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterAttributes:
                   $ref: '#/components/schemas/meterAttributes'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - meterAttributes
+                - pagination
       description: >-
-        Submit the meter identification to receive the meter metadata
+        Submit the meter identification to receive the meter metadata. The following validation needs to be implemented manually. At least one of the
+        meterAttributes properties are required in the request.
       responses:
         '200':
           description: OK
@@ -43,25 +55,110 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/meterMetadataResponse'
+                type: object
+                properties:
+                  meterMetadata:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/meterMetadataResponse'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - meterMetadata
+                  - pagination
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter/export:
+    post:
+      tags:
+        - MeteringPoint
+      operationId: export-meter
+      summary: Export meter by attributes
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterAttributes:
+                  $ref: '#/components/schemas/meterAttributes'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - meterAttributes
+      description: >-
+        Submit the meter identification to receive the meter metadata. The following validation needs to be implemented manually. At least one of the
+        meterAttributes properties are required in the request.
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/octet-stream:
+              schema:
+                # a binary file of any type
+                type: string
+                format: binary
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -74,23 +171,25 @@ paths:
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/meter:
     post:
-      operationId: request-meter
+      tags:
+        - MeteringPoint
+      operationId: create-metering-point
       summary: Create meter with metadata
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
@@ -101,11 +200,19 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterMetadata:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/meterMetadata'
+                  $ref: '#/components/schemas/createMeteringPointMetadata'
+              required:
+                - marketParticipantContext
+                - meterMetadata
         description: >-
-          Submit the meter metadata object to create the meter
+          Submit the meter metadata object to create the meter.
+          All of the following meterMetadata properties are required in the request:
+            - location
+            - meterCommon
+          The following validation needs to be implemented manually. Exactly one of the meterMetadata properties are required in the request:
+            - electricityCharacteristics
+            - gasCharacteristics
+            - aggregatorCharacteristics
       responses:
         '201':
           description: Created
@@ -113,25 +220,23 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/meterCommonResponse'
+                $ref: '#/components/schemas/createMeteringPointResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -141,23 +246,25 @@ paths:
         "422":
           $ref: '#/components/responses/unprocessableEntity'
     put:
+      tags:
+        - MeteringPoint
       operationId: update-meter
       summary: Update meter metadata
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
@@ -169,10 +276,21 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterMetadata:
                   type: array
+                  minItems: 1
                   items:
                     $ref: '#/components/schemas/meterMetadata'
+              required:
+                - marketParticipantContext
+                - meterMetadata
         description: >-
-          Submit the meter metadata object to update its metadata
+          Submit the meter metadata object to update its metadata.
+          All of the following meterMetadata properties are required in the request:
+            - location
+            - meterCommon
+          The following validation needs to be implemented manually. Exactly one of the meterMetadata properties are required in the request:
+            - electricityCharacteristics
+            - gasCharacteristics
+            - aggregatorCharacteristics
       responses:
         '200':
           description: OK
@@ -180,23 +298,24 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
                 type: array
+                minItems: 1
                 items:
                   $ref: '#/components/schemas/meterCommonResponse'
         "400":
@@ -211,23 +330,25 @@ paths:
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/meter/search/customer:
     post:
+      tags:
+        - MeteringPoint
       operationId: find-meter-of-customer
       summary: Find a meter by Customer EIC
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
           description: Document creation timestamp
           required: true
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         - in: header
           name: x-document-identification
           description: Document unique identification
           required: true
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
@@ -239,8 +360,12 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 customerEic:
                   type: array
+                  minItems: 1
                   items:
                     $ref: '#/components/schemas/eic'
+              required:
+                - marketParticipantContext
+                - customerEic
       description: >-
         Submit the customer identification and optionally the commodity type to receive the meter metadata
       responses:
@@ -250,25 +375,108 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: '#/components/headers/status'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
-                $ref: '#/components/headers/x-document-date-time'
+                $ref: '#/components/schemas/dateTime'
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: '#/components/headers/x-document-identification'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
                 type: array
+                minItems: 1
                 items:
                   $ref: '#/components/schemas/meterMetadataResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter/change:
+    post:
+      tags:
+        - MeteringPoint
+      operationId: find-meter-changes
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                updatePeriodStart:
+                  $ref: '#/components/schemas/dateTime'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - updatePeriodStart
+                - pagination
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meterMetadata:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/meterMetadataResponse'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - meterMetadata
+                  - pagination
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -291,20 +499,12 @@ components:
   schemas:
     dateTime:
       type: string
-      format: datetime
+      format: date-time
       description: ISO 8601 zone datetime
-      # RegEx to verify the yyyy-MM-ddTHH:mm:ssZ format
-      pattern: >-
-        [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?
     uniqueId:
       type: string
       format: uuid
       description: UUID
-      minLength: 36
-      maxLength: 36
-      # RegEx to verify the UUID format
-      pattern: >-
-        ^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$
     statusCode:
       type: integer
       description: HTTP status code
@@ -319,95 +519,183 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    commodityType:
+      type: string
+      enum: [ ELECTRICITY, NATURAL_GAS ]
+    marketParticipantRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    meterType:
+      type: string
+      enum: [ REMOTE_READING, VIRTUAL, NON_REMOTE_READING ]
+    consumptionScale:
+      type: string
+      enum: [ SMALL, LARGE ]
+    connectionState:
+      type: string
+      enum: [ CONNECTED, DISCONNECTED ]
+    resolutionElectricity:
+      type: string
+      enum: [ PT15M, PT1H ]
+    resolutionGas:
+      type: string
+      enum: [ PT1H, P1D ]
+    customerTypeElectricity:
+      type: string
+      enum: [ CONSUMER, GRID_OPERATOR, PRODUCER, MICRO, LINE_OPERATOR, ENERGY_STORAGE_UNIT, CHARGING_POINT_OPERATOR ]
+    customerTypeGas:
+      type: string
+      enum: [ CONSUMER, CONSUMER_2, GRID_OPERATOR, PRODUCER, PROTECTED, PROTECTED_OTHER, GENERAL_INTEREST_SERVICE_PROVIDER, POWER_PRODUCER_FROM_GAS, LNG_OPERATOR ]
+    production:
+      type: boolean
+    productionSourceElectricity:
+      type: string
+      enum: [ SOLAR, WIND, HYDRO, BIOGAS, BIOMASS, NATURAL_GAS, OIL_SHALE, OTHER_RENEWABLE, OTHER_NON_RENEWABLE ]
+    productionSourceGas:
+      type: string
+      enum: [ BIOGAS ]
+    borderPoint:
+      type: boolean
+    transmissionNetwork:
+      type: string
+    apartmentAssociation:
+      type: boolean
+    isolatedMeteringPoint:
+      type: boolean
+    electricalHeating:
+      type: boolean
+    chargingPoint:
+      type: boolean
+    filterValue:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    filterType:
+      type: string
+      enum: [ EQUALS, GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN_OR_EQUALS ]
+    doubleFilter:
+      type: object
+      properties:
+        filterValue:
+          $ref: '#/components/schemas/filterValue'
+        filterType:
+          $ref: '#/components/schemas/filterType'
+      required:
+        - filterValue
+        - filterType
+    storageCapacity:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    storageEnergy:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    productionCapacity:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    transmissionCapacity:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
     meterCommon:
       type: object
       description: Common meter metadata
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
-        meterCommodity:
-          type: string
-          enum: [ELECTRICITY, NATURAL_GAS]
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
         meterType:
-          type: string
-          enum: [REMOTE_READING, VIRTUAL, NON_REMOTE_READING]
+          $ref: '#/components/schemas/meterType'
       required:
         - meterEic
-        - meterCommodity
+        - commodityType
         - meterType
     meterCommonAttributes:
       type: object
-      description: Common meter metadata
+      description: >-
+        Common meter metadata. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
+        request, then at least one of the meterCommonAttributes properties are required.
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
-        meterCommodity:
-          type: string
-          enum: [ELECTRICITY, NATURAL_GAS]
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
         meterType:
-          type: string
-          enum: [REMOTE_READING, VIRTUAL, NON_REMOTE_READING]
+          $ref: '#/components/schemas/meterType'
     meterCommonResponse:
       type: object
       description: Common meter metadata
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
-        meterCommodity:
-          type: string
-          enum: [ELECTRICITY, NATURAL_GAS]
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
         meterType:
-          type: string
-          enum: [REMOTE_READING, VIRTUAL, NON_REMOTE_READING]
+          $ref: '#/components/schemas/meterType'
         version:
           type: integer
           minimum: 1
       required:
         - meterEic
-        - meterCommodity
+        - commodityType
         - meterType
         - version
+    createMeteringPoint:
+      type: object
+      description: Common meter metadata after creating metering point
+      properties:
+        meterInternalId:
+          type: string
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        meterType:
+          $ref: '#/components/schemas/meterType'
+        validFrom:
+          $ref: '#/components/schemas/dateTime'
     electricityCharacteristics:
       type: object
       description: Electricity characteristics
       properties:
         consumptionScale:
-          type: string
-          enum: [SMALL, LARGE]
+          $ref: '#/components/schemas/consumptionScale'
         connectionState:
-          type: string
-          enum: [CONNECTED, DISCONNECTED]
+          $ref: '#/components/schemas/connectionState'
         resolution:
-          type: string
-          enum: [PT15M, PT1H]
+          $ref: '#/components/schemas/resolutionElectricity'
         customerType:
-          type: string
-          enum: [CONSUMER, GRID_OPERATOR, PRODUCER, MICRO, LINE_OPERATOR, ENERGY_STORAGE_UNIT, CHARGING_POINT_OPERATOR]
+          $ref: '#/components/schemas/customerTypeElectricity'
         production:
-          type: boolean
+          $ref: '#/components/schemas/production'
         productionSource:
-          type: string
-          enum: [SOLAR, WIND, HYDRO, BIOGAS, BIOMASS, NATURAL_GAS, OIL_SHALE, OTHER_RENEWABLE, OTHER_NON_RENEWABLE]
+          $ref: '#/components/schemas/productionSourceElectricity'
         borderPoint:
-          type: boolean
+          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
-          type: string
+          $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
-          type: boolean
+          $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
-          type: boolean
+          $ref: '#/components/schemas/isolatedMeteringPoint'
         electricalHeating:
-          type: boolean
+          $ref: '#/components/schemas/electricalHeating'
         chargingPoint:
-          type: boolean
+          $ref: '#/components/schemas/chargingPoint'
         storageCapacity:
-          type: integer
+          $ref: '#/components/schemas/storageCapacity'
         storageEnergy:
-          type: integer
+          $ref: '#/components/schemas/storageEnergy'
         productionCapacity:
-          type: integer
+          $ref: '#/components/schemas/productionCapacity'
         transmissionCapacity:
-          type: integer
+          $ref: '#/components/schemas/transmissionCapacity'
       required:
         - consumptionScale
         - connectionState
@@ -416,7 +704,7 @@ components:
         - production
         - borderPoint
         - transmissionNetwork
-        - appartmentAssociation
+        - apartmentAssociation
         - isolatedMeteringPoint
         - electricalHeating
         - chargingPoint
@@ -426,72 +714,63 @@ components:
         - transmissionCapacity
     electricityCharacteristicsAttributes:
       type: object
-      description: Electricity characteristics
+      description: Electricity characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
+        request, then at least one of the electricityCharacteristicsAttributes properties are required.
       properties:
         consumptionScale:
-          type: string
-          enum: [SMALL, LARGE]
+          $ref: '#/components/schemas/consumptionScale'
         connectionState:
-          type: string
-          enum: [CONNECTED, DISCONNECTED]
+          $ref: '#/components/schemas/connectionState'
         resolution:
-          type: string
-          enum: [PT15M, PT1H]
+          $ref: '#/components/schemas/resolutionElectricity'
         customerType:
-          type: string
-          enum: [CONSUMER, GRID_OPERATOR, PRODUCER, MICRO, LINE_OPERATOR, ENERGY_STORAGE_UNIT, CHARGING_POINT_OPERATOR]
+          $ref: '#/components/schemas/customerTypeElectricity'
         production:
-          type: boolean
+          $ref: '#/components/schemas/production'
         productionSource:
-          type: string
-          enum: [SOLAR, WIND, HYDRO, BIOGAS, BIOMASS, NATURAL_GAS, OIL_SHALE, OTHER_RENEWABLE, OTHER_NON_RENEWABLE]
+          $ref: '#/components/schemas/productionSourceElectricity'
         borderPoint:
-          type: boolean
+          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
-          type: string
-        appartmentAssociation:
-          type: boolean
+          $ref: '#/components/schemas/transmissionNetwork'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
-          type: boolean
+          $ref: '#/components/schemas/isolatedMeteringPoint'
         electricalHeating:
-          type: boolean
+          $ref: '#/components/schemas/electricalHeating'
         chargingPoint:
-          type: boolean
+          $ref: '#/components/schemas/chargingPoint'
         storageCapacity:
-          type: integer
+          $ref: '#/components/schemas/doubleFilter'
         storageEnergy:
-          type: integer
+          $ref: '#/components/schemas/doubleFilter'
         productionCapacity:
-          type: integer
+          $ref: '#/components/schemas/doubleFilter'
         transmissionCapacity:
-          type: integer
+          $ref: '#/components/schemas/doubleFilter'
     gasCharacteristics:
       type: object
       description: Gas characteristics
       properties:
         consumptionScale:
-          type: string
-          enum: [SMALL, LARGE]
+          $ref: '#/components/schemas/consumptionScale'
         connectionState:
-          type: string
-          enum: [CONNECTED, DISCONNECTED]
+          $ref: '#/components/schemas/connectionState'
         resolution:
-          type: string
-          enum: [PT1H, P1D]
+          $ref: '#/components/schemas/resolutionGas'
         customerType:
-          type: string
-          enum: [CONSUMER, CONSUMER_2, GRID_OPERATOR, PRODUCER, PROTECTED, PROTECTED_OTHER, GENERAL_INTEREST_SERVICE_PROVIDER, POWER_PRODUCER_FROM_GAS, LNG_OPERATOR]
+          $ref: '#/components/schemas/customerTypeGas'
         production:
-          type: boolean
+          $ref: '#/components/schemas/production'
         productionSource:
-          type: string
-          enum: [BIOGAS]
+          $ref: '#/components/schemas/productionSourceGas'
         borderPoint:
-          type: boolean
+          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
-          type: string
-        appartmentAssociation:
-          type: boolean
+          $ref: '#/components/schemas/transmissionNetwork'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
       required:
         - consumptionScale
         - connectionState
@@ -500,34 +779,30 @@ components:
         - production
         - borderPoint
         - transmissionNetwork
-        - appartmentAssociation
+        - apartmentAssociation
     gasCharacteristicsAttributes:
       type: object
-      description: Gas characteristics
+      description: Gas characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
+        request, then at least one of the gasCharacteristicsAttributes properties are required.
       properties:
         consumptionScale:
-          type: string
-          enum: [SMALL, LARGE]
+          $ref: '#/components/schemas/consumptionScale'
         connectionState:
-          type: string
-          enum: [CONNECTED, DISCONNECTED]
+          $ref: '#/components/schemas/connectionState'
         resolution:
-          type: string
-          enum: [PT1H, P1D]
+          $ref: '#/components/schemas/resolutionGas'
         customerType:
-          type: string
-          enum: [CONSUMER, CONSUMER_2, GRID_OPERATOR, PRODUCER, PROTECTED, PROTECTED_OTHER, GENERAL_INTEREST_SERVICE_PROVIDER, POWER_PRODUCER_FROM_GAS, LNG_OPERATOR]
+          $ref: '#/components/schemas/customerTypeGas'
         production:
-          type: boolean
+          $ref: '#/components/schemas/production'
         productionSource:
-          type: string
-          enum: [BIOGAS]
+          $ref: '#/components/schemas/productionSourceGas'
         borderPoint:
-          type: boolean
+          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
-          type: string
-        appartmentAssociation:
-          type: boolean
+          $ref: '#/components/schemas/transmissionNetwork'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
     aggregatorCharacteristics:
       type: object
       description: Aggregator characteristics
@@ -538,7 +813,8 @@ components:
         - parentMeterEic
     aggregatorCharacteristicsAttributes:
       type: object
-      description: Aggregator characteristics
+      description: Aggregator characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
+        request, then at least one of the aggregatorCharacteristicsAttributes properties are required.
       properties:
         parentMeterEic:
           $ref: '#/components/schemas/eic'
@@ -547,36 +823,91 @@ components:
       description: Location object
       properties:
         adsId:
-          type: integer
+          type: string
+          format: ads-oid
+          minLength: 10
+          maxLength: 10
+          pattern: >-
+            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
         comment:
           type: string
           maxLength: 255
-      required:
-        - adsId
+    createMeterPointLocation:
+      type: object
+      description: Location object
+      properties:
+        adsId:
+          type: string
+          format: ads-oid
+          minLength: 10
+          maxLength: 10
+          pattern: >-
+            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        comment:
+          type: string
+          maxLength: 255
+        county:
+          type: string
+          maxLength: 255
+        municipality:
+          type: string
+          maxLength: 255
+        locality:
+          type: string
+          maxLength: 255
+        streetAddress:
+          type: string
+          maxLength: 255
+        postcode:
+          type: string
+          maxLength: 50
+        latitude:
+          type: number
+          format: double
+          multipleOf: 0.00001
+        longitude:
+          type: number
+          format: double
+          multipleOf: 0.00001
     meterMetadata:
       type: object
-      description: Meter metadata object (full dataset)
+      description: Meter metadata object (full dataset).
       properties:
         meterCommon:
           $ref: '#/components/schemas/meterCommon'
         location:
           $ref: '#/components/schemas/location'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        gasCharacteristics:
+          $ref: '#/components/schemas/gasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
       required:
         - meterCommon
         - location
-      oneOf:
-        - properties:
-            electricityCharacteristics:
-              $ref: '#/components/schemas/electricityCharacteristics'
-        - properties:
-            gasCharacteristics:
-              $ref: '#/components/schemas/gasCharacteristics'
-        - properties:
-            aggregatorCharacteristics:
-              $ref: '#/components/schemas/aggregatorCharacteristics'
+    createMeteringPointMetadata:
+      type: object
+      description: Meter metadata object (full dataset).
+      properties:
+        meteringPoint:
+          $ref: '#/components/schemas/meterCommon'
+        meterLocation:
+          $ref: '#/components/schemas/createMeterPointLocation'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        gasCharacteristics:
+          $ref: '#/components/schemas/gasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
+      required:
+        - meteringPoint
+        - meterLocation
     meterAttributes:
       type: object
-      description: Meter metadata object (full dataset)
+      description: >-
+        Meter metadata object (full dataset). The following validation needs to be implemented manually. At least one of the
+        meterAttributes properties are required in the request.
       properties:
         meterCommon:
           $ref: '#/components/schemas/meterCommonAttributes'
@@ -590,43 +921,80 @@ components:
           $ref: '#/components/schemas/location'
     meterMetadataResponse:
       type: object
-      description: Meter metadata object (full dataset)
+      description: >-
+        Meter metadata object (full dataset). All of the following meterMetadataResponse properties are required in the response:
+          - location
+          - meterCommon
+        The following validation needs to be implemented manually. Exactly one of the meterMetadataResponse properties are required in the response:
+          - electricityCharacteristics
+          - gasCharacteristics
+          - aggregatorCharacteristics
       properties:
-        meterCommon:
+        meteringPoint:
           $ref: '#/components/schemas/meterCommonResponse'
         location:
           $ref: '#/components/schemas/location'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        gasCharacteristics:
+          $ref: '#/components/schemas/gasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
       required:
-        - meterCommon
+        - meteringPoint
         - location
-      oneOf:
-        - properties:
-            electricityCharacteristics:
-              $ref: '#/components/schemas/electricityCharacteristics'
-        - properties:
-            gasCharacteristics:
-              $ref: '#/components/schemas/gasCharacteristics'
-        - properties:
-            aggregatorCharacteristics:
-              $ref: '#/components/schemas/aggregatorCharacteristics'
+    createMeteringPointResponse:
+      type: object
+      properties:
+        meteringPoint:
+          $ref: '#/components/schemas/createMeteringPoint'
+        meterLocation:
+          $ref: '#/components/schemas/createMeterPointLocation'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        gasCharacteristics:
+          $ref: '#/components/schemas/gasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
     marketParticipantContext:
       type: object
       properties:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/marketParticipantRole'
         purpose:
           type: string
           maxLength: 50
         commodityType:
-          type: string
-          enum: [ELECTRICITY, NATURAL_GAS]
+          $ref: '#/components/schemas/commodityType'
       required:
         - marketParticipantIdentification
         - marketParticipantRole
         - commodityType
+    pagingRequest:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - page
+        - pageSize
+    pagingResponse:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 1
     badRequest:
       type: object
       description: Bad Request
@@ -667,27 +1035,6 @@ components:
           type: string
         cause:
           $ref: '#/components/schemas/defaultProblem'
-  headers:
-    status:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/statusCode'
-    x-document-date-time:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/dateTime'
-    x-document-identification:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/uniqueId'
-    x-original-document-identification:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/uniqueId'
   responses:
     badRequest:
       description: Bad Request
@@ -695,19 +1042,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -718,19 +1065,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -741,19 +1088,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -764,19 +1111,19 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
@@ -787,24 +1134,24 @@ components:
         status:
           description: HTTP status code
           schema:
-            $ref: '#/components/headers/status'
+            $ref: '#/components/schemas/statusCode'
         x-document-date-time:
           description: Document creation timestamp
           schema:
-            $ref: '#/components/headers/x-document-date-time'
+            $ref: '#/components/schemas/dateTime'
         x-document-identification:
           description: Document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
         x-original-document-identification:
           description: Request document unique identification
           schema:
-            $ref: '#/components/headers/x-document-identification'
+            $ref: '#/components/schemas/uniqueId'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/unprocessableEntity'
 servers:
-  - url: https://test-newavp.elering.ee
+  - url: https://test-datahub.elering.ee
 security:
-  - JWTAuth: []
+  - JWTAuth: [ ]

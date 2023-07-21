@@ -3,9 +3,11 @@
 ---
 
 ## OpenAPI
-/openapi - API descritpion for market participants
+
+/openapi - API description for market participants
 
 ## Update: November 2022
+
 Each API includes marketParticipantContext with the following elements:
 * marketParticipantIdentification - EIC X-code of the market participant sending the API query
 * marketParticipantRole - defines the role in which the specific query is sent; for example a market participant who is an open supplier can query information as an open supplier, as a BRP, and as a named supplier
@@ -26,7 +28,13 @@ We have added for comments new interface descritpions:
 - forwardInvoice
 - networkBill
 
-## Interface status
+## Update: July 2023
+
+Added latest openapi descriptions.
+
+> NB! Includes now not yet developed API endpoints also!
+
+## Interface status (needs update)
 
 | Service                    | Status                                   |     |
 |----------------------------|------------------------------------------|-----|
@@ -42,5 +50,3 @@ We have added for comments new interface descritpions:
 | meteringData               | mock                                     |     |
 | meteringPoint              | db: search<br/> mock: others<br/>        |     |
 | networkBill                | rfc                                      |     |
-
-

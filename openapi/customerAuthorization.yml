@@ -1,18 +1,18 @@
 openapi: 3.0.3
 info:
-  title: Balance state
-  version: 0.2.0
-  description: API to read current balance group assignment or changes from a given date.
+  title: CustomerAuthorization
+  version: 0.1.0
+  description: API to read customer authorizations
 tags:
-  - name: Balance state
-    description: API to read current balance group assignment or changes from a given date.
+  - name: CustomerAuthorization
+    description: API to read customer authorizations
 paths:
-  /api/v1/balance-state/search:
+  /api/v1/customer-authorization/search:
     post:
       tags:
-        - Balance state
-      operationId: find-balance-state
-      summary: Find the current balance group assignment
+        - CustomerAuthorization
+      operationId: get-customer-authorization
+      summary: Find authorizations granted by a customer by identity
       security:
         - JWTAuth: [ ]
       parameters:
@@ -37,10 +37,13 @@ paths:
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
+                customerAuthorizationAttributes:
+                  $ref: '#/components/schemas/customerAuthorizationAttributes'
               required:
                 - marketParticipantContext
-        description: >-
-          Submit the service provider (as part of the marketParticipantContext) to receive the actual state of balance group assignment.
+                - customerAuthorizationAttributes
+      description: >-
+        Submit the authorization attributes to receive persmissions granted by customers.
       responses:
         '200':
           description: OK
@@ -64,23 +67,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/balancePoint'
+                $ref: '#/components/schemas/customerAuthorization'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
           $ref: '#/components/responses/unauthorized'
         "403":
           $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/balance-state/change:
+  /api/v1/customer-authorization/change:
     post:
       tags:
-        - Balance state
-      operationId: find-balance-state-change
-      summary: Find changes in balance group assignment
+        - CustomerAuthorization
+      operationId: get-customer-authorization-changes
+      summary: Find changes in authorizations granted by customers
       security:
         - JWTAuth: [ ]
       parameters:
@@ -111,7 +114,7 @@ paths:
                 - marketParticipantContext
                 - updatePeriodStart
       description: >-
-        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive periodic changes of balance group assignment.
+        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive periodic changes of customer authorizations.
       responses:
         '200':
           description: OK
@@ -135,9 +138,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/balancePoint'
+                $ref: '#/components/schemas/customerAuthorization'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -180,73 +181,51 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    balanceStateActionType:
-      type: string
-      enum: [ADDED, UPDATED, REMOVED]
-    agreementType:
-      type: string
-      description: Agreement type
-      enum: [GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE]
     marketParticipantRole:
       type: string
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
       enum: [ELECTRICITY, NATURAL_GAS]
-    balancePoint:
+    customerAuthorizationAttributes:
       type: object
-      properties:
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        customers:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/customers'
-        serviceProviders:
-          type: array
-          minItems: 2
-          items:
-            $ref: '#/components/schemas/serviceProvider'
-      required:
-        - meterEic
-        - customers
-        - serviceProviders
-    customers:
-      type: object
+      description: Search attributes object
       properties:
         customerEic:
           $ref: '#/components/schemas/eic'
-        dateStart:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
           $ref: '#/components/schemas/dateTime'
-        dateEnd:
+        periodEnd:
           $ref: '#/components/schemas/dateTime'
-        balanceStateAction:
-          $ref: '#/components/schemas/balanceStateActionType'
-        timestamp:
+        subjectPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        subjectPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
+    customerAuthorization:
+      type: object
+      description: Customer authorization object
+      properties:
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+        subjectPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        subjectPeriodEnd:
           $ref: '#/components/schemas/dateTime'
       required:
         - customerEic
-        - dateStart
-    serviceProvider:
-      type: object
-      properties:
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          $ref: '#/components/schemas/agreementType'
-        dateStart:
-          $ref: '#/components/schemas/dateTime'
-        dateEnd:
-          $ref: '#/components/schemas/dateTime'
-        balanceStateAction:
-          $ref: '#/components/schemas/balanceStateActionType'
-        timestamp:
-          $ref: '#/components/schemas/dateTime'
-      required:
-        - serviceProviderEic
-        - agreementType
-        - dateStart
+        - meterEic
+        - periodStart
+        - periodEnd
+        - subjectPeriodStart
+        - subjectPeriodEnd
     marketParticipantContext:
       type: object
       properties:
