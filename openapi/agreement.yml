@@ -14,7 +14,7 @@ paths:
       operationId: get-agreement
       summary: Find agreements by type and metering point, and optionally period
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -39,11 +39,14 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 agreementAttributes:
                   $ref: '#/components/schemas/agreementAttributes'
+                commodityType:
+                  $ref: '#/components/schemas/commodityType'
                 pagination:
                   $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
                 - agreementAttributes
+                - commodityType
                 - pagination
       description: >-
         Submit at least the customer identification or meter identification or agreement ID to receive the agreement details, with optional filtering using the period or agreement type.
@@ -82,6 +85,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/agreementResponse'
+                  commodityType:
+                    $ref: '#/components/schemas/commodityType'
                   pagination:
                     $ref: '#/components/schemas/pagingResponse'
         "400":
@@ -101,7 +106,7 @@ paths:
       operationId: create-agreement
       summary: Create an agreement
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -120,15 +125,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                agreement:
-                  $ref: '#/components/schemas/agreement'
-              required:
-                - marketParticipantContext
-                - agreement
+              $ref: '#/components/schemas/createAgreementRequest'
         description: >-
           Submit the agreement object(s) to create agreements.
       responses:
@@ -169,7 +166,7 @@ paths:
       operationId: update-agreement
       summary: Update agreements
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -188,15 +185,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                agreement:
-                  $ref: '#/components/schemas/agreement'
-              required:
-                - marketParticipantContext
-                - agreement
+              $ref: '#/components/schemas/updateAgreementRequest'
         description: >-
           Submit agreement object(s) to update the matching agreements.
       responses:
@@ -233,14 +222,13 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/agreement/delete:
-    post:
+    delete:
       tags:
         - Agreement
       operationId: delete-agreement
       summary: Delete agreement by submitting an identical request
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -264,10 +252,13 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 agreement:
-                  $ref: '#/components/schemas/agreement'
+                  $ref: '#/components/schemas/deleteAgreement'
+                commodityType:
+                  $ref: '#/components/schemas/commodityType'
               required:
                 - marketParticipantContext
                 - agreement
+                - commodityType
       description: >-
         Submit agreement object(s) to delete the matching agreements.
       responses:
@@ -307,7 +298,7 @@ paths:
       operationId: export-agreements
       summary: Export agreements by attributes
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -332,9 +323,14 @@ paths:
                   $ref: '#/components/schemas/marketParticipantContext'
                 agreementAttributes:
                   $ref: '#/components/schemas/agreementAttributes'
+                commodityType:
+                  $ref: '#/components/schemas/commodityType'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
                 - agreementAttributes
+                - commodityType
       description: >-
         Submit at least the customer identification or meter identification or agreement ID to receive the agreement details, with optional filtering using the period or agreement type.
         The OpenAPI generator does not provide configuration options to make at least one element of a given property list required, therefore the following validation needs to be implemented manually.
@@ -384,10 +380,10 @@ paths:
     post:
       tags:
         - Agreement
-      operationId: find-agreement-change
-      summary: Return agreements that were created or updated after the marked point in time
+      operationId: get-agreement-change
+      summary: Return agreements that were created or updated after the marked point in time - NOT IMPLEMENTED
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -498,8 +494,8 @@ components:
     agreementType:
       type: string
       description: Agreement type
-      enum: [GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE]
-    marketParticipantRole:
+      enum: [ GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE, BORDER_GRID, BORDER_SUPPLY ]
+    serviceProviderRole:
       type: string
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     pagingRequest:
@@ -529,8 +525,7 @@ components:
       type: object
       properties:
         agreementId:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/eic'
         meterEic:
           $ref: '#/components/schemas/eic'
         agreementType:
@@ -553,11 +548,29 @@ components:
         - customerEic
         - commodityType
         - dateStart
+    deleteAgreement:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        dateStart:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - agreementType
+        - serviceProviderEic
+        - customerEic
+        - dateStart
     agreementResponse:
       type: object
       properties:
         agreementId:
-          $ref: '#/components/schemas/uniqueId'
+          type: string
         meterEic:
           $ref: '#/components/schemas/eic'
         agreementType:
@@ -583,6 +596,33 @@ components:
         - customerEic
         - dateStart
         - version
+    agreementChange:
+      type: object
+      properties:
+        agreementExternalId:
+          type: string
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
+        customerEic:
+          $ref: '#/components/schemas/eic'
+        preliminaryTerminationFee:
+          type: boolean
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        dateStart:
+          $ref: '#/components/schemas/dateTime'
+        dateEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - agreementType
+        - serviceProviderEic
+        - customerEic
+        - commodityType
+        - dateStart
     agreementAttributes:
       type: object
       properties:
@@ -607,16 +647,33 @@ components:
           $ref: '#/components/schemas/listAll'
       required:
         - listAll
+    createAgreementRequest:
+      type: object
+      properties:
+        marketParticipantContext:
+          $ref: '#/components/schemas/marketParticipantContext'
+        agreement:
+          $ref: '#/components/schemas/agreement'
+      required:
+        - marketParticipantContext
+        - agreement
+    updateAgreementRequest:
+      type: object
+      properties:
+        marketParticipantContext:
+          $ref: '#/components/schemas/marketParticipantContext'
+        agreement:
+          $ref: '#/components/schemas/agreementChange'
+      required:
+        - marketParticipantContext
+        - agreementChange
     marketParticipantContext:
       type: object
       properties:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:

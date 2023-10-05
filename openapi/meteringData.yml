@@ -1,16 +1,16 @@
 openapi: 3.0.3
 info:
-  title: MeteringData
+  title: MeterData
   version: 0.3.0
   description: API to create, read, and update meter readings.
 tags:
-  - name: MeteringData
-    description: API to create, read, and update metering data.
+  - name: MeterData
+    description: API to create, read, and update meter data.
 paths:
   /api/v1/meter-data/search:
     post:
       tags:
-        - MeteringData
+        - MeterData
       operationId: get-meter-data
       summary: Find meter data by meter and customer EIC, period, and optionally resolution
       security:
@@ -38,7 +38,7 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterAttributes:
-                  $ref: '#/components/schemas/meterData'
+                  $ref: '#/components/schemas/getMeterData'
                 pagination:
                   $ref: '#/components/schemas/pagingRequest'
               required:
@@ -100,8 +100,8 @@ paths:
   /api/v1/meter-data:
     post:
       tags:
-        - MeteringData
-      operationId: request-meter-data
+        - MeterData
+      operationId: create-meter-data
       summary: Create or update meter reading data
       security:
         - JWTAuth: [ ]
@@ -131,7 +131,7 @@ paths:
                   type: array
                   minItems: 1
                   items:
-                    $ref: '#/components/schemas/accountTimeSeries'
+                    $ref: '#/components/schemas/meterData'
               required:
                 - marketParticipantContext
                 - meterData
@@ -158,11 +158,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/uniqueId'
           content:
-            application/json:
+            text/plain:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/meterDataCommonResponse'
+                type: string
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -171,12 +169,101 @@ paths:
           $ref: '#/components/responses/forbidden'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter-data/status:
+    post:
+      tags:
+        - MeterData
+      operationId: get-meter-data-status
+      summary: Find meter data processing status by document and issuer identification
+      deprecated: true
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                documentInfo:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    properties:
+                      originalDocumentIdentification:
+                        $ref: '#/components/schemas/uniqueId'
+                      senderEic:
+                        $ref: '#/components/schemas/eic'
+                    required:
+                      - originalDocumentIdentification
+                      - senderEic
+              required:
+                - marketParticipantContext
+                - documentInfo
+      description: >-
+        Submit the sender and document identification to receive the processing status
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statuses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/status'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
   /api/v1/meter-data/change:
     post:
       tags:
-        - MeteringData
-      operationId: find-meter-data-change
+        - MeterData
+      operationId: get-meter-data-change
       summary: Find metering points where data was changed within the defined period
+      deprecated: true
       security:
         - JWTAuth: [ ]
       parameters:
@@ -296,118 +383,101 @@ components:
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
-    marketParticipantRole:
+    serviceProviderRole:
       type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
+    status:
+      type: object
+      properties:
+        originalDocumentIdentification:
+          $ref: '#/components/schemas/uniqueId'
+        statusCode:
+          $ref: '#/components/schemas/statusCode'
+        reasonText:
+          type: string
+          description: Textual reason of the response
     readingType:
       type: string
       description: Meter reading quality type
-      enum: [ ESTIMATED, METERED ]
+      enum: [ E, M ]
     resolution:
       type: string
       enum: [ PT15M, PT1H, P1D ]
     meterData:
       type: object
-      description: Attributes to request meter readings
-      properties:
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-        resolution:
-          $ref: '#/components/schemas/resolution'
-      required:
-        - serviceProviderEic
-        - meterEic
-        - periodStart
-    accountTimeSeries:
-      type: object
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-        period:
+        periods:
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/period'
       required:
         - meterEic
-        - period
     period:
       type: object
       properties:
-        readingTimestamp:
-          $ref: '#/components/schemas/dateTime'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-        resolution:
+        r:
           $ref: '#/components/schemas/resolution'
-        accountInterval:
+        aI:
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/accountInterval'
       required:
-        - periodStart
-        - periodEnd
-        - resolution
-        - accountInterval
+        - r
+        - aI
     accountInterval:
       type: object
       description: Meter reading period item
       properties:
-        pos:
-          type: integer
-          minimum: 1
-        inType:
-          $ref: '#/components/schemas/readingType'
-        outType:
-          $ref: '#/components/schemas/readingType'
-        measurement:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/measurement'
+        pS:
+          $ref: '#/components/schemas/dateTime'
+        inQty:
+          $ref: '#/components/schemas/measurement'
+        outQty:
+          $ref: '#/components/schemas/measurement'
       required:
-        - pos
-        - measurement
+        - pS
     measurement:
       type: object
       description: Measurement result
       properties:
-        measurementUnit:
-          type: string
-          enum: [ KWH, M3 ]
-        in:
+        rTime:
+          $ref: '#/components/schemas/dateTime'
+        rType:
+          $ref: '#/components/schemas/readingType'
+        kwh:
           type: number
           format: decimal
           minimum: 0
           multipleOf: 0.001
-        out:
+        m3:
           type: number
           format: decimal
           minimum: 0
           multipleOf: 0.001
+    getMeterData:
+      type: object
+      description: Attributes to request meter readings
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - meterEic
+        - periodStart
     marketParticipantContext:
       type: object
       properties:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:

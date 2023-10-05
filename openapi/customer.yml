@@ -12,7 +12,7 @@ paths:
       tags:
         - Customer
       operationId: get-customer
-      summary: Find a customer by identity
+      summary: Find a customer by identity - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -82,8 +82,8 @@ paths:
     post:
       tags:
         - Customer
-      operationId: request-customer
-      summary: Create customer with metadata
+      operationId: create-customer
+      summary: Create customer with metadata - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -151,7 +151,7 @@ paths:
       tags:
         - Customer
       operationId: update-customer
-      summary: Update customer with metadata
+      summary: Update customer with metadata - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -184,8 +184,8 @@ paths:
         description: >-
           Submit the customer object to update the customer identity and their metadata.
       responses:
-        '201':
-          description: Created
+        '200':
+          description: OK
           headers:
             status:
               description: HTTP status code
@@ -213,6 +213,8 @@ paths:
           $ref: '#/components/responses/unauthorized'
         "403":
           $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
   /api/v1/customer/change:
@@ -220,7 +222,7 @@ paths:
       tags:
         - Customer
       operationId: get-customer-changes
-      summary: Find changes in customer identity or metadata since a given point in time
+      summary: Find changes in customer identity or metadata since a given point in time - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -320,25 +322,25 @@ components:
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
     metadataType:
       type: string
-      enum: [FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL]
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL ]
     extensionType:
       type: string
-      enum: [COUNTRY, ISSUER]
+      enum: [ COUNTRY, ISSUER ]
     customerType:
       type: string
-      enum: [PHYSICAL_PERSON, LEGAL_PERSON, ORGANIZATION]
+      enum: [ PHYSICAL_PERSON, LEGAL_PERSON, ORGANIZATION ]
     identityType:
       type: string
-      enum: [EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID]
-    marketParticipantRole:
-      type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+      enum: [ EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID ]
     commodityType:
       type: string
-      enum: [ELECTRICITY, NATURAL_GAS]
+      enum: [ ELECTRICITY, NATURAL_GAS ]
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
     customer:
       type: object
-      description: Customer object with identites and metadata
+      description: Customer object with identities and metadata
       properties:
         identities:
           type: array
@@ -394,10 +396,7 @@ components:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:

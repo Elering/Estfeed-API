@@ -11,7 +11,7 @@ paths:
     post:
       tags:
         - MeteringPoint
-      operationId: find-meter
+      operationId: get-metering-point
       summary: Find a meter by attributes
       security:
         - JWTAuth: [ ]
@@ -44,7 +44,6 @@ paths:
               required:
                 - marketParticipantContext
                 - meterAttributes
-                - pagination
       description: >-
         Submit the meter identification to receive the meter metadata. The following validation needs to be implemented manually. At least one of the
         meterAttributes properties are required in the request.
@@ -83,6 +82,83 @@ paths:
                 required:
                   - meterMetadata
                   - pagination
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter/search/border:
+    post:
+      tags:
+        - MeteringPoint
+      operationId: get-border-metering-points-by-customer
+      summary: Get a border metering points by customer
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                customerEic:
+                  $ref: '#/components/schemas/eic'
+              required:
+                - marketParticipantContext
+                - customerEic
+      description: >-
+        Submit the customer identification and the commodity type to receive border metering points
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meteringPoints:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/meteringPoint'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -236,7 +312,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/createMeteringPointResponse'
+                $ref: '#/components/schemas/meteringPointEntityResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -248,7 +324,7 @@ paths:
     put:
       tags:
         - MeteringPoint
-      operationId: update-meter
+      operationId: update-metering-point
       summary: Update meter metadata
       security:
         - JWTAuth: [ ]
@@ -275,10 +351,7 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 meterMetadata:
-                  type: array
-                  minItems: 1
-                  items:
-                    $ref: '#/components/schemas/meterMetadata'
+                  $ref: '#/components/schemas/updateMeterMetadata'
               required:
                 - marketParticipantContext
                 - meterMetadata
@@ -314,10 +387,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                items:
-                  $ref: '#/components/schemas/meterCommonResponse'
+                $ref: '#/components/schemas/meteringPointEntityResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -332,7 +402,7 @@ paths:
     post:
       tags:
         - MeteringPoint
-      operationId: find-meter-of-customer
+      operationId: get-metering-points-by-customer
       summary: Find a meter by Customer EIC
       security:
         - JWTAuth: [ ]
@@ -391,10 +461,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                items:
-                  $ref: '#/components/schemas/meterMetadataResponse'
+                type: object
+                properties:
+                  customerEic:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/eic'
+                  meteringPoints:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/meterMetadataResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -409,7 +487,8 @@ paths:
     post:
       tags:
         - MeteringPoint
-      operationId: find-meter-changes
+      operationId: get-meter-changes
+      summary: Return metering points that were created or updated after the marked point in time - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -522,12 +601,18 @@ components:
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
-    marketParticipantRole:
+    serviceProviderRole:
       type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
-    meterType:
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
+    meteringType:
       type: string
       enum: [ REMOTE_READING, VIRTUAL, NON_REMOTE_READING ]
+    meteringPointType:
+      type: string
+      enum: [ BORDER, AGGREGATION, REGULAR, INTERNAL ]
+    sourceType:
+      type: string
+      enum: [ AGREEMENT, PERMISSION, OWNERSHIP ]
     consumptionScale:
       type: string
       enum: [ SMALL, LARGE ]
@@ -554,10 +639,8 @@ components:
     productionSourceGas:
       type: string
       enum: [ BIOGAS ]
-    borderPoint:
-      type: boolean
     transmissionNetwork:
-      type: string
+      $ref: '#/components/schemas/eic'
     apartmentAssociation:
       type: boolean
     isolatedMeteringPoint:
@@ -610,14 +693,13 @@ components:
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-        meterType:
-          $ref: '#/components/schemas/meterType'
+        meteringType:
+          $ref: '#/components/schemas/meteringType'
+        meteringPointType:
+          $ref: '#/components/schemas/meteringPointType'
       required:
         - meterEic
-        - commodityType
-        - meterType
+        - meteringType
     meterCommonAttributes:
       type: object
       description: >-
@@ -628,8 +710,16 @@ components:
           $ref: '#/components/schemas/eic'
         commodityType:
           $ref: '#/components/schemas/commodityType'
-        meterType:
-          $ref: '#/components/schemas/meterType'
+        meteringType:
+          $ref: '#/components/schemas/meteringType'
+        meteringPointType:
+          $ref: '#/components/schemas/meteringPointType'
+        ownerMarketRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        sourceType:
+          type: array
+          items:
+            $ref: '#/components/schemas/sourceType'
     meterCommonResponse:
       type: object
       description: Common meter metadata
@@ -638,26 +728,64 @@ components:
           $ref: '#/components/schemas/eic'
         commodityType:
           $ref: '#/components/schemas/commodityType'
-        meterType:
-          $ref: '#/components/schemas/meterType'
+        meteringType:
+          $ref: '#/components/schemas/meteringType'
+        meteringPointType:
+          $ref: '#/components/schemas/meteringPointType'
+        sourceType:
+          type: array
+          items:
+            $ref: '#/components/schemas/sourceType'
         version:
           type: integer
           minimum: 1
       required:
         - meterEic
         - commodityType
-        - meterType
+        - meteringType
+        - meteringPointType
         - version
-    createMeteringPoint:
+    getMeterMetadata:
+      type: object
+      description: Meter metadata object (full dataset).
+      properties:
+        meteringPoint:
+          $ref: '#/components/schemas/meterCommonResponse'
+        meterLocation:
+          $ref: '#/components/schemas/meteringPointLocation'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        gasCharacteristics:
+          $ref: '#/components/schemas/naturalGasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
+      required:
+        - meteringPoint
+        - meterLocation
+    gridOperator:
+      type: object
+      description: Grid operator
+      properties:
+        gridOperatorName:
+          type: string
+        gridOperatorRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+    meteringPointAttributes:
       type: object
       description: Common meter metadata after creating metering point
       properties:
-        meterInternalId:
-          type: string
+        meterEic:
+          $ref: '#/components/schemas/eic'
         commodityType:
           $ref: '#/components/schemas/commodityType'
-        meterType:
-          $ref: '#/components/schemas/meterType'
+        ownerExternalId:
+          type: string
+        ownerMarketRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        meteringType:
+          $ref: '#/components/schemas/meteringType'
+        meteringPointType:
+          $ref: '#/components/schemas/meteringPointType'
         validFrom:
           $ref: '#/components/schemas/dateTime'
     electricityCharacteristics:
@@ -676,8 +804,6 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        borderPoint:
-          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
           $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
@@ -702,7 +828,6 @@ components:
         - resolution
         - customerType
         - production
-        - borderPoint
         - transmissionNetwork
         - apartmentAssociation
         - isolatedMeteringPoint
@@ -712,6 +837,40 @@ components:
         - storageEnergy
         - productionCapacity
         - transmissionCapacity
+    updateElectricityCharacteristics:
+      type: object
+      description: Electricity characteristics
+      properties:
+        consumptionScale:
+          $ref: '#/components/schemas/consumptionScale'
+        connectionState:
+          $ref: '#/components/schemas/connectionState'
+        resolution:
+          $ref: '#/components/schemas/resolutionElectricity'
+        customerType:
+          $ref: '#/components/schemas/customerTypeElectricity'
+        production:
+          $ref: '#/components/schemas/production'
+        productionSource:
+          $ref: '#/components/schemas/productionSourceElectricity'
+        transmissionNetwork:
+          $ref: '#/components/schemas/transmissionNetwork'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
+        isolatedMeteringPoint:
+          $ref: '#/components/schemas/isolatedMeteringPoint'
+        electricalHeating:
+          $ref: '#/components/schemas/electricalHeating'
+        chargingPoint:
+          $ref: '#/components/schemas/chargingPoint'
+        storageCapacity:
+          $ref: '#/components/schemas/storageCapacity'
+        storageEnergy:
+          $ref: '#/components/schemas/storageEnergy'
+        productionCapacity:
+          $ref: '#/components/schemas/productionCapacity'
+        transmissionCapacity:
+          $ref: '#/components/schemas/transmissionCapacity'
     electricityCharacteristicsAttributes:
       type: object
       description: Electricity characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
@@ -729,8 +888,6 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        borderPoint:
-          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
           $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
@@ -749,7 +906,7 @@ components:
           $ref: '#/components/schemas/doubleFilter'
         transmissionCapacity:
           $ref: '#/components/schemas/doubleFilter'
-    gasCharacteristics:
+    naturalGasCharacteristics:
       type: object
       description: Gas characteristics
       properties:
@@ -765,8 +922,6 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        borderPoint:
-          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
           $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
@@ -777,9 +932,28 @@ components:
         - resolution
         - customerType
         - production
-        - borderPoint
         - transmissionNetwork
         - apartmentAssociation
+    updateNaturalGasCharacteristics:
+      type: object
+      description: Gas characteristics
+      properties:
+        consumptionScale:
+          $ref: '#/components/schemas/consumptionScale'
+        connectionState:
+          $ref: '#/components/schemas/connectionState'
+        resolution:
+          $ref: '#/components/schemas/resolutionGas'
+        customerType:
+          $ref: '#/components/schemas/customerTypeGas'
+        production:
+          $ref: '#/components/schemas/production'
+        productionSource:
+          $ref: '#/components/schemas/productionSourceGas'
+        transmissionNetwork:
+          $ref: '#/components/schemas/transmissionNetwork'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
     gasCharacteristicsAttributes:
       type: object
       description: Gas characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
@@ -797,8 +971,6 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        borderPoint:
-          $ref: '#/components/schemas/borderPoint'
         transmissionNetwork:
           $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
@@ -811,6 +983,12 @@ components:
           $ref: '#/components/schemas/eic'
       required:
         - parentMeterEic
+    updateAggregatorCharacteristics:
+      type: object
+      description: Aggregator characteristics
+      properties:
+        parentMeterEic:
+          $ref: '#/components/schemas/eic'
     aggregatorCharacteristicsAttributes:
       type: object
       description: Aggregator characteristics. The following validation needs to be implemented manually. If meterCommonAttributes is present in the
@@ -832,7 +1010,7 @@ components:
         comment:
           type: string
           maxLength: 255
-    createMeterPointLocation:
+    meteringPointLocation:
       type: object
       description: Location object
       properties:
@@ -873,19 +1051,34 @@ components:
       type: object
       description: Meter metadata object (full dataset).
       properties:
-        meterCommon:
+        meteringPoint:
           $ref: '#/components/schemas/meterCommon'
-        location:
-          $ref: '#/components/schemas/location'
+        meterLocation:
+          $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
-          $ref: '#/components/schemas/electricityCharacteristics'
+          $ref: '#/components/schemas/electricityCharacteristicsAttributes'
         gasCharacteristics:
-          $ref: '#/components/schemas/gasCharacteristics'
+          $ref: '#/components/schemas/gasCharacteristicsAttributes'
         aggregatorCharacteristics:
-          $ref: '#/components/schemas/aggregatorCharacteristics'
+          $ref: '#/components/schemas/aggregatorCharacteristicsAttributes'
       required:
-        - meterCommon
-        - location
+        - meteringPoint
+    updateMeterMetadata:
+      type: object
+      description: Meter metadata object (full dataset).
+      properties:
+        meteringPoint:
+          $ref: '#/components/schemas/meterCommon'
+        meterLocation:
+          $ref: '#/components/schemas/meteringPointLocation'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/updateElectricityCharacteristics'
+        naturalGasCharacteristics:
+          $ref: '#/components/schemas/updateNaturalGasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/updateAggregatorCharacteristics'
+      required:
+        - meteringPoint
     createMeteringPointMetadata:
       type: object
       description: Meter metadata object (full dataset).
@@ -893,11 +1086,11 @@ components:
         meteringPoint:
           $ref: '#/components/schemas/meterCommon'
         meterLocation:
-          $ref: '#/components/schemas/createMeterPointLocation'
+          $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristics'
-        gasCharacteristics:
-          $ref: '#/components/schemas/gasCharacteristics'
+        naturalGasCharacteristics:
+          $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'
       required:
@@ -933,27 +1126,36 @@ components:
         meteringPoint:
           $ref: '#/components/schemas/meterCommonResponse'
         location:
-          $ref: '#/components/schemas/location'
+          $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristics'
         gasCharacteristics:
-          $ref: '#/components/schemas/gasCharacteristics'
+          $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'
       required:
         - meteringPoint
         - location
-    createMeteringPointResponse:
+    meteringPoint:
+      type: object
+      properties:
+        meterMetadata:
+          $ref: '#/components/schemas/getMeterMetadata'
+        gridOperator:
+          $ref: '#/components/schemas/gridOperator'
+      required:
+        - getMeterMetadata
+    meteringPointEntityResponse:
       type: object
       properties:
         meteringPoint:
-          $ref: '#/components/schemas/createMeteringPoint'
+          $ref: '#/components/schemas/meteringPointAttributes'
         meterLocation:
-          $ref: '#/components/schemas/createMeterPointLocation'
+          $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristics'
-        gasCharacteristics:
-          $ref: '#/components/schemas/gasCharacteristics'
+        naturalGasCharacteristics:
+          $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'
     marketParticipantContext:
@@ -962,10 +1164,7 @@ components:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:

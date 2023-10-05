@@ -34,19 +34,49 @@ Added latest openapi descriptions.
 
 > NB! Includes now not yet developed API endpoints also!
 
-## Interface status (needs update)
+## Update: October 2023
+Updated status and timeline of interfaces.
 
-| Service                    | Status                                   |     |
-|----------------------------|------------------------------------------|-----|
-| agreementCoordination-v2   | rfc                                      |     |
-| agreements                 | db: search, export<br/>mock: others<br/> |     |
-| balanceState               | rfc                                      |     |
-| connectionState-v2         | rfc                                      |     |
-| customerEic                | mock                                     |     |
-| directMessage              | rfc                                      |     |
-| eic                        | mock                                     |     |
-| forwardInvoice             | rfc                                      |     |
-| gridagreementmeteringpoint | mock                                     |     |
-| meteringData               | mock                                     |     |
-| meteringPoint              | db: search<br/> mock: others<br/>        |     |
-| networkBill                | rfc                                      |     |
+meteringData has significant changes:
+- we changed timeslot description. 
+- Previously timeslot was defined by position but now it is defined by absolute time.
+        
+        "meterEic": "69YH5LHV6NFM84YP",
+        "periods": [
+        {
+          "r": "PT15M",
+          "aI": [
+            {
+              "pS": "2023-10-05T09:00:00Z",
+              "inQty": {
+                "rTime": "2023-10-05T09:40:12.247Z",
+                "rType": "E",
+                "kwh": 0,
+                "m3": 0
+              },
+              "outQty": {
+                "rTime": "2023-10-05T09:40:12.248Z",
+                "rType": "E",
+                "kwh": 0,
+                "m3": 0
+        
+
+## Interface status 
+
+| Service                    | Status                                                                                                                       | Timeline           |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------|--------------------|
+| agreement                  | implemented                                                                                                                  |                    |
+| agreementCoordination      | notMVP                                                                                                                       | planned 2024 Q3 Q4 |
+| balanceState               | rfc                                                                                                                          | expected 2024 Feb  |
+| connectionState            | notMVP                                                                                                                       | planned 2024 Q3 Q4 |
+| customer                   | rfc                                                                                                                          | expected 2024 Feb  |
+| directMessage              | notMVP                                                                                                                       | planned 2024 Q3 Q4 |
+| eic                        | notMVP                                                                                                                       | planned 2024 Q3 Q4 |
+| gridagreementmeteringpoint | N/A                                                                                                                          |                    |
+| jointInvoice               | rfc                                                                                                                          | expected 2024 Feb  |
+| meteringData               | meter-data - implemented<br/>meter-data/search - implemented<br/>meter-data/status - waiting<br/>meter-data/change - waiting | expected ?         |
+| meteringPoint              | implemented                                                                                                                  |                    |
+| networkBill                | rfc                                                                                                                          | expected 2024 Feb  |
+
+notMVP - will be implemented after go-live.<br/>
+rfc - interface spec, waiting in development queue.

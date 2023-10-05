@@ -12,7 +12,7 @@ paths:
       tags:
         - Eic
       operationId: get-eic-from-range
-      summary: Get a list of unused EICs from a range
+      summary: Get a list of unused EICs from a range - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -34,7 +34,7 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'WithMarketParticipantContext' ]
+              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
@@ -95,7 +95,7 @@ paths:
       tags:
         - Eic
       operationId: create-eic-range
-      summary: Create an EIC range for a given operation type
+      summary: Create an EIC range for a given operation type - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -117,7 +117,7 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'WithMarketParticipantContext' ]
+              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
@@ -180,7 +180,7 @@ paths:
       tags:
         - Eic
       operationId: verify-eics
-      summary: Verify an EIC
+      summary: Verify an EIC - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -202,7 +202,7 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'WithMarketParticipantContext' ]
+              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
@@ -262,7 +262,7 @@ paths:
       tags:
         - Eic
       operationId: generate-eic-check
-      summary: Generate EIC check character
+      summary: Generate EIC check character - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -284,7 +284,7 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'WithMarketParticipantContext' ]
+              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
@@ -339,7 +339,7 @@ paths:
       tags:
         - Eic
       operationId: create-eic
-      summary: Create an EIC
+      summary: Create an EIC - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -361,7 +361,7 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'WithMarketParticipantContext' ]
+              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
@@ -483,12 +483,12 @@ components:
       type: string
       description: EIC function types
       enum: [ BALANCE_RESPONSIBLE_PARTY, ENERGY_SUPPLIER, BALANCING_SERVICE_PROVIDER, CAPACITY_TRADER, CONSUMER, COORDINATION_CENTER_OPERATOR, GRID_ACCESS_PROVIDER, GRID_OPERATOR, IMBALANCE_SETTLEMENT_RESPONSIBLE, INFORMATION_PROVIDER, INTERCONNECTION_TRADE_RESPONSIBLE, MARKET_OPERATOR, METER_ADMINISTRATOR, METERED_DATA_RESPONSIBLE, METERING_POINT_ADMINISTRATOR, NOMINATION_VALIDATOR, PARTY_CONNECTED_TO_GRID, PRODUCER, PRODUCTION_RESPONSIBLE_PARTY, PROFILE_MAINTENANCE_PARTY, RESOURCE_PROVIDER, RESOURCE_CAPACITY_MECHANISM_OPERATOR, STORAGE_SYSTEM_OPERATOR, SYSTEM_OPERATOR, TRADE_RESPONSIBLE_PARTY, TRANSMISSION_CAPACITY_ALLOCATOR, LNG_SYSTEM_OPERATOR, DISTRIBUTION_SYSTEM_OPERATOR, NETWORK_USER, PLATFORM_OPERATOR, MARKET_AREA_OPERATOR, MEASUREMENT_SERVICE_PROVIDER, METERING_POINT_OPERATOR, METERED_DATA_AGGREGATOR, BALANCE_GROUP_RESPONSIBLE_PARTY, BALANCE_GROUP, BIDDING_ZONE, BORDER_AREA, CONTROL_AREA, SYNCHRONOUS_AREA, COORDINATION_CENTER_ZONE, ITC, LOCAL_MARKET_AREA, MARKET_BALANCE_AREA, MARKET_AREA, REGIONAL_OUTAGE_AREA, MEMBER_STATE, ACCOUNTING_POINT, METERING_POINT, CONNECTION_POINT, VIRTUAL_TRADING_POINTS, VIRTUAL_INTERCONNECTION_POINTS, BUSBAR_COUPLER, INTERNAL_LINE, INTERNAL_TIE_LINE, TIELINE, TRANSFORMER, COMPRESSOR_STATION, FLOW_CONTROL_STATION, GAS_TREATMENT_FACILITY, ODORIZATION_FACILITY, LOCATION, CAPACITY_BANK, GENERATION, GENERATION_UNIT, LNG_PLANT, LOAD, PRODUCTION_UNIT, REACTANCE_BANK, RESOURCE_OBJECT, STORAGE_PLANT, PRODUCTION_PLANT, GAS_STORAGE_FACILITY, LNG_TERMINAL, RESOURCE_CAPACITY_MARKET_UNIT, CORRIDOR, ENDPOINT, IT_SYSTEM, SUBSTATION, PASSIVE_NODE, CONSUMPTION_RESPONSIBLE_PARTY, DISTRIBUTION_NETWORK_AREA, METERING_GRID_AREA, SCHEDULING_AREA, LFC_AREA, LFC_BLOCK, OUTAGE_COORDINATION_REGION, EXCHANGE_POINT, RESOURCE_AGGREGATOR, FRR_SHARING_REGION, BUSBAR, DYNAMIC_REACTIVE_POWER_DEVICE, HARMONIC_FILTER, SHUNT_REACTOR, ROTATING_PHASE_SHIFTER, IT_TOPIC ]
-    marketParticipantRole:
+    serviceProviderRole:
       type: string
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
-      enum: [ELECTRICITY, NATURAL_GAS]
+      enum: [ ELECTRICITY, NATURAL_GAS ]
     eicAttributes:
       type: object
       properties:
@@ -577,14 +577,11 @@ components:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:
-        - marketParticipantIdentification
+        - marketParticipantIdentification-
         - marketParticipantRole
         - commodityType
     badRequest:
