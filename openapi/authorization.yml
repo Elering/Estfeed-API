@@ -38,7 +38,7 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 authorization:
-                  $ref: '#/components/schemas/authorization'
+                  $ref: '#/components/schemas/createAuthorization'
               required:
                 - marketParticipantContext
                 - authorization
@@ -65,7 +65,218 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/authorizationResponse'
+                $ref: '#/components/schemas/createAuthorizationResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+    put:
+      tags:
+        - Authorization
+      operationId: update-user-authorization
+      summary: Update user authorization
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                authorization:
+                  $ref: '#/components/schemas/authorizationUpdate'
+              required:
+                - marketParticipantContext
+                - authorization
+      responses:
+        '200':
+          description: Updated
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateUserAuthorizationResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/authorization/search:
+    post:
+      tags:
+        - Authorization
+      operationId: get-user-authorizations-by-market-role
+      summary: Get user authorizations by market role
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                personalCode:
+                  type: string
+                userName:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/userName'
+              required:
+                - marketParticipantContext
+      responses:
+        '200':
+          description: Get user authorizations by market role
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/authorizationByMarketRole'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/authorization/delete:
+    post:
+      tags:
+        - Authorization
+      operationId: delete-user-authorization
+      summary: Delete user authorization
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                authorization:
+                  $ref: '#/components/schemas/deleteAuthorization'
+              required:
+                - marketParticipantContext
+                - authorization
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -114,6 +325,15 @@ components:
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
+    identityType:
+      type: string
+      enum: [ EIC, PERSONAL_ID, DOCUMENT_ID, COMPANY_ID ]
+    metadataType:
+      type: string
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME]
+    extensionType:
+      type: string
+      enum: [ COUNTRY ]
     marketParticipantContext:
       type: object
       properties:
@@ -121,40 +341,95 @@ components:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
           $ref: '#/components/schemas/serviceProviderRole'
-        purpose:
-          type: string
-          maxLength: 50
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:
         - marketParticipantIdentification
         - marketParticipantRole
         - commodityType
-    authorization:
+    createAuthorization:
       type: object
       properties:
         userRoleId:
           type: array
+          minItems: 1
           items:
             type: string
           example: [ C49DFEB7-040B-422F-82EF-BE14FDFA8700, B929D8B9-CB15-46DB-9B74-0D8EF7F69D00 ]
-        userInternalId:
+        userId:
+          $ref: '#/components/schemas/userId'
+      required:
+        - userRoleId
+        - userId
+    deleteAuthorization:
+      type: object
+      properties:
+        authorizationInternalId:
+          $ref: '#/components/schemas/uniqueId'
+      required:
+        - authorizationInternalId
+    userId:
+      type: object
+      properties:
+        externalId:
+          $ref: '#/components/schemas/eic'
+        identityType:
+          $ref: '#/components/schemas/identityType'
+        identityExtension:
+          $ref: '#/components/schemas/identityExtension'
+      required:
+        - externalId
+        - identityType
+    userAuthorizationRole:
+      type: object
+      properties:
+        userRole:
           type: string
-          example: 2BF636F4-3B3D-11ED-A261-0242AC120002
+          enum: ['ADMIN', 'EDITOR', 'VIEWER', 'EDITOR_METERING_DATA', 'EDITOR_METERING_POINT', 'EDITOR_AGREEMENT', 'VIEWER_METERING_DATA',
+                 'VIEWER_METERING_POINT', 'VIEWER_AGREEMENT', 'VIEWER_AUTHORIZATION', 'EDITOR_AUTHORIZATION', 'VIEWER_CUSTOMER',
+                 'EDITOR_CUSTOMER', 'VIEWER_PERMISSION']
+        userRoleInternalId:
+          $ref: '#/components/schemas/uniqueId'
+      required:
+        - userRole
+        - userRoleInternalId
+    userName:
+      type: object
+      properties:
+        metadataType:
+          $ref: '#/components/schemas/metadataType'
+        metadataValue:
+          type: string
         validFrom:
           $ref: '#/components/schemas/dateTime'
         validTo:
           $ref: '#/components/schemas/dateTime'
-      required:
-        - userRoleId
-        - userInternalId
-        - validFrom
-    authorizationResponse:
+    identityExtension:
       type: object
       properties:
-        serviceProviderInternalId:
+        extensionType:
+          $ref: '#/components/schemas/extensionType'
+        extensionValue:
+          type: string
+          maxLength: 250
+      required:
+        - extensionType
+        - extensionValue
+    authorizationUpdate:
+      type: object
+      properties:
+        authorizationId:
           type: string
           example: 2BF636F4-3B3D-11ED-A261-0242AC120002
+        validTo:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - authorizationId
+    createAuthorizationResponse:
+      type: object
+      properties:
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
         serviceProviderRole:
           $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
@@ -164,13 +439,58 @@ components:
           items:
             type: string
           example: [ C49DFEB7-040B-422F-82EF-BE14FDFA8700, B929D8B9-CB15-46DB-9B74-0D8EF7F69D00 ]
-        userInternalId:
+        userId:
+          $ref: '#/components/schemas/userId'
+        userName:
+          type: array
+          items:
+            $ref: '#/components/schemas/userName'
+    getAuthorizationResponse:
+      type: object
+      properties:
+        authorizationInternalId:
+          $ref: '#/components/schemas/uniqueId'
+        userRoleName:
           type: string
-          example: 2BF636F4-3B3D-11ED-A261-0242AC120002
-        validFrom:
-          $ref: '#/components/schemas/dateTime'
-        validTo:
-          $ref: '#/components/schemas/dateTime'
+        userRoleInternalId:
+          $ref: '#/components/schemas/uniqueId'
+        userInternalId:
+          $ref: '#/components/schemas/uniqueId'
+    updateUserAuthorizationResponse:
+      type: object
+      properties:
+        serviceProviderEic:
+          $ref: '#/components/schemas/eic'
+        serviceProviderRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        userRoleId:
+          type: string
+          example: [ C49DFEB7-040B-422F-82EF-BE14FDFA8700, B929D8B9-CB15-46DB-9B74-0D8EF7F69D00 ]
+        userIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/userId'
+        userName:
+          type: array
+          items:
+            $ref: '#/components/schemas/userName'
+    authorizationByMarketRole:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/userId'
+        userName:
+          type: array
+          items:
+            $ref: '#/components/schemas/userName'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/userAuthorizationRole'
     badRequest:
       type: object
       description: Bad Request

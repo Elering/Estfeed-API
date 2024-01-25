@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: eic
+  version: 0.1.0
+paths: { }
+components:
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+      # RegEx to verify the yyyy-MM-ddTHH:mm:ssZ format
+      pattern: >-
+        [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    commodityType:
+      type: string
+      enum: [ ELECTRICITY, NATURAL_GAS ]
+    eicWithoutCheck:
+      type: string
+      description: EIC code without check character
+      minLength: 15
+      maxLength: 15
+      # RegEx to verify the EIC format of the first 15 characters
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}
+    email:
+      type: string
+      format: email
+      description: E-mail address
+      # RegEx to verify the e-mail format (RFC 5322)
+      pattern: >-
+        (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 16
+    acerCode:
+      type: string
+      format: acer
+      description: ACER code
+      minLength: 12
+      maxLength: 12
+      pattern: >-
+        A[0-9]{7}[A-Z0-9]\.(AT|BE|BG|CY|CZ|DE|DK|EE|ES|FI|FR|GR|HR|HU|IE|IT||LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|UK)
+    eicCodeType:
+      type: string
+      description: EIC code types
+      enum: [ PARTY, AREA, METERING_POINT, RESOURCE_OBJECT, TIE_LINE, LOCATION, SUBSTATION ]
+    filterValue:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    filterType:
+      type: string
+      enum: [ EQUALS, GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN_OR_EQUALS ]
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    doubleFilter:
+      type: object
+      properties:
+        filterValue:
+          $ref: '#/components/schemas/filterValue'
+        filterType:
+          $ref: '#/components/schemas/filterType'
+      required:
+        - filterValue
+        - filterType
+    metadataType:
+      type: string
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME ]
+    metadata:
+      type: object
+      properties:
+        metadataType:
+          $ref: '#/components/schemas/metadataType'
+        metadataValue:
+          type: string
+          maxLength: 250
+      required:
+        - metadataType
+        - metadataValue
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    pagingRequest:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - page
+        - pageSize
+    pagingResponse:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 1
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
+    businessObjectType:
+      type: string
+      enum: [ PHYSICAL_PERSON,
+              LEGAL_PERSON,
+              PARTY,
+              AREA,
+              METERING_POINT,
+              RESOURCE_OBJECT,
+              TIE_LINE,
+              LOCATION,
+              SUBSTATION,
+              ORGANIZATION,
+              TECHNICAL_USER ]

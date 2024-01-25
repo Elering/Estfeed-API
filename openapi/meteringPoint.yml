@@ -287,7 +287,7 @@ paths:
             - meterCommon
           The following validation needs to be implemented manually. Exactly one of the meterMetadata properties are required in the request:
             - electricityCharacteristics
-            - gasCharacteristics
+            - naturalGasCharacteristics
             - aggregatorCharacteristics
       responses:
         '201':
@@ -362,7 +362,7 @@ paths:
             - meterCommon
           The following validation needs to be implemented manually. Exactly one of the meterMetadata properties are required in the request:
             - electricityCharacteristics
-            - gasCharacteristics
+            - naturalGasCharacteristics
             - aggregatorCharacteristics
       responses:
         '200':
@@ -639,7 +639,10 @@ components:
     productionSourceGas:
       type: string
       enum: [ BIOGAS ]
-    transmissionNetwork:
+    coordinateSystem:
+      type: string
+      enum: [ WGS84, LEST97 ]
+    transmissionNetworkEic:
       $ref: '#/components/schemas/eic'
     apartmentAssociation:
       type: boolean
@@ -700,6 +703,17 @@ components:
       required:
         - meterEic
         - meteringType
+    meterCommonUpdate:
+      type: object
+      description: Common meter metadata
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        meteringType:
+          $ref: '#/components/schemas/meteringType'
+      required:
+        - meterEic
+        - meteringType
     meterCommonAttributes:
       type: object
       description: >-
@@ -755,7 +769,7 @@ components:
           $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristics'
-        gasCharacteristics:
+        naturalGasCharacteristics:
           $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'
@@ -804,8 +818,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
@@ -822,21 +836,6 @@ components:
           $ref: '#/components/schemas/productionCapacity'
         transmissionCapacity:
           $ref: '#/components/schemas/transmissionCapacity'
-      required:
-        - consumptionScale
-        - connectionState
-        - resolution
-        - customerType
-        - production
-        - transmissionNetwork
-        - apartmentAssociation
-        - isolatedMeteringPoint
-        - electricalHeating
-        - chargingPoint
-        - storageCapacity
-        - storageEnergy
-        - productionCapacity
-        - transmissionCapacity
     updateElectricityCharacteristics:
       type: object
       description: Electricity characteristics
@@ -853,8 +852,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
@@ -888,8 +887,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
@@ -922,18 +921,10 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
-      required:
-        - consumptionScale
-        - connectionState
-        - resolution
-        - customerType
-        - production
-        - transmissionNetwork
-        - apartmentAssociation
     updateNaturalGasCharacteristics:
       type: object
       description: Gas characteristics
@@ -950,8 +941,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
     gasCharacteristicsAttributes:
@@ -971,8 +962,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
     aggregatorCharacteristics:
@@ -981,8 +972,6 @@ components:
       properties:
         parentMeterEic:
           $ref: '#/components/schemas/eic'
-      required:
-        - parentMeterEic
     updateAggregatorCharacteristics:
       type: object
       description: Aggregator characteristics
@@ -1039,6 +1028,13 @@ components:
         postcode:
           type: string
           maxLength: 50
+        coordinates:
+          $ref: '#/components/schemas/coordinates'
+    coordinates:
+      type: object
+      properties:
+        coordinateSystem:
+          $ref: '#/components/schemas/coordinateSystem'
         latitude:
           type: number
           format: double
@@ -1047,6 +1043,8 @@ components:
           type: number
           format: double
           multipleOf: 0.00001
+      required:
+        - coordinateSystem
     meterMetadata:
       type: object
       description: Meter metadata object (full dataset).
@@ -1057,7 +1055,7 @@ components:
           $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristicsAttributes'
-        gasCharacteristics:
+        naturalGasCharacteristics:
           $ref: '#/components/schemas/gasCharacteristicsAttributes'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristicsAttributes'
@@ -1068,7 +1066,7 @@ components:
       description: Meter metadata object (full dataset).
       properties:
         meteringPoint:
-          $ref: '#/components/schemas/meterCommon'
+          $ref: '#/components/schemas/meterCommonUpdate'
         meterLocation:
           $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
@@ -1106,7 +1104,7 @@ components:
           $ref: '#/components/schemas/meterCommonAttributes'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristicsAttributes'
-        gasCharacteristics:
+        naturalGasCharacteristics:
           $ref: '#/components/schemas/gasCharacteristicsAttributes'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristicsAttributes'
@@ -1120,7 +1118,7 @@ components:
           - meterCommon
         The following validation needs to be implemented manually. Exactly one of the meterMetadataResponse properties are required in the response:
           - electricityCharacteristics
-          - gasCharacteristics
+          - naturalGasCharacteristics
           - aggregatorCharacteristics
       properties:
         meteringPoint:
@@ -1129,7 +1127,7 @@ components:
           $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
           $ref: '#/components/schemas/electricityCharacteristics'
-        gasCharacteristics:
+        naturalGasCharacteristics:
           $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'

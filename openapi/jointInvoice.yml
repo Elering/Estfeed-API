@@ -1,20 +1,103 @@
 openapi: 3.0.3
 info:
-  title: Joint invoice
+  title: JointInvoice
   version: 0.3.0
   description: API to create and read invoices forwarded via the Datahub.
 tags:
-  - name: Joint invoice
+  - name: JointInvoice
     description: API to create and read invoices forwarded via the Datahub.
 paths:
+  /api/v1/joint-invoice:
+    post:
+      tags:
+        - JointInvoice
+      operationId: request-joint-invoice
+      summary: Create a forwarded invoice
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                invoiceList:
+                  x-exclude-field: true #Due to the openapi generation, to exclude this field, should not be the last property
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                jointInvoiceHeadersList:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/jointInvoiceHeaders'
+              required:
+                - marketParticipantContext
+                - jointInvoiceHeadersList
+                - invoiceList
+            encoding:
+              marketParticipantContext:
+                contentType: application/json
+              jointInvoiceHeadersList:
+                contentType: application/json
+        description: >-
+          Submit the invoice object to hand over the invoice
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createJointInvoiceResponse'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
   /api/v1/joint-invoice/search:
     post:
       tags:
-        - Joint invoice
+        - JointInvoice
       operationId: find-joint-invoice
       summary: Find a forwarded invoice
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -46,7 +129,7 @@ paths:
                 - jointInvoiceAttributes
                 - pagination
       description: >-
-        Submit the invoice attributes to find the list of forwarded invoices     
+        Submit the invoice attributes to find the list of forwarded invoices
       responses:
         '200':
           description: OK
@@ -74,7 +157,6 @@ paths:
                 properties:
                   jointInvoiceList:
                     type: array
-                    minItems: 1
                     items:
                       $ref: '#/components/schemas/jointInvoiceListItem'
                   pagination:
@@ -95,11 +177,11 @@ paths:
   /api/v1/joint-invoice/download:
     post:
       tags:
-        - Joint invoice
+        - JointInvoice
       operationId: download-joint-invoice
       summary: Download a forwarded invoice
       security:
-        - JWTAuth: []
+        - JWTAuth: [ ]
       parameters:
         - in: header
           name: x-document-date-time
@@ -128,7 +210,7 @@ paths:
                 - marketParticipantContext
                 - invoiceId
       description: >-
-        Submit the invoice ID to download the forwarded invoices   
+        Submit the invoice ID to download the forwarded invoices
       responses:
         '200':
           description: OK
@@ -165,295 +247,6 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/joint-invoice:
-    post:
-      tags:
-        - Joint invoice
-      operationId: request-joint-invoice
-      summary: Create a forwarded invoice
-      security:
-        - JWTAuth: []
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                jointInvoice:
-                  $ref: '#/components/schemas/jointInvoice'
-              required:
-                - marketParticipantContext
-                - jointInvoice
-        description: >-
-          Submit the invoice object to hand over the invoice
-      responses:
-        '201':
-          description: Created
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-    put:
-      tags:
-        - Joint invoice
-      operationId: update-joint-invoice
-      summary: Update a forwarded invoice
-      security:
-        - JWTAuth: []
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                jointInvoice:
-                  $ref: '#/components/schemas/jointInvoiceUpdate'
-              required:
-                - marketParticipantContext
-                - jointInvoiceUpdate
-        description: >-
-          Submit the invoice object to update an existing invoice
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/joint-invoice/delete:
-    post:
-      tags:
-        - Joint invoice
-      operationId: delete-joint-invoice
-      summary: Delete a forwarded invoice
-      security:
-        - JWTAuth: []
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                invoiceId:
-                  $ref: '#/components/schemas/uniqueId'
-              required:
-                - marketParticipantContext
-                - invoiceId
-      description: >-
-        Submit the invoice ID to delete the invoices   
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/joint-invoice/change:
-    post:
-      tags:
-        - Joint invoice
-      operationId: find-joint-invoice-change
-      summary: Find a forwarded invoice received since a given point in time
-      security:
-        - JWTAuth: []
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                updatePeriodStart:
-                  $ref: '#/components/schemas/dateTime'
-                pagination:
-                  $ref: '#/components/schemas/pagingRequest'
-              required:
-                - marketParticipantContext
-                - updatePeriodStart
-                - pagination
-      description: >-
-        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive the list of invoices uploaded dince that time.
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  jointInvoiceList:
-                    type: array
-                    minItems: 1
-                    items:
-                      $ref: '#/components/schemas/jointInvoiceListItem'
-                  pagination:
-                    $ref: '#/components/schemas/pagingResponse'
-                required:
-                  - jointInvoiceList
-                  - pagination
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
 components:
   securitySchemes:
     JWTAuth:
@@ -462,7 +255,7 @@ components:
       bearerFormat: JWT
       description: |-
         Example:
-        > Authorization: Bearer <token>        
+        > Authorization: Bearer <token>
   schemas:
     dateTime:
       type: string
@@ -491,45 +284,57 @@ components:
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
-      enum: [ELECTRICITY, NATURAL_GAS]
+      enum: [ ELECTRICITY, NATURAL_GAS ]
     jointInvoiceAttributes:
       type: object
       properties:
         invoiceId:
           $ref: '#/components/schemas/uniqueId'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        createdTimeFrom:
+          $ref: '#/components/schemas/dateTime'
+        createdTimeTo:
+          $ref: '#/components/schemas/dateTime'
         senderEic:
           $ref: '#/components/schemas/eic'
         receiverEic:
           $ref: '#/components/schemas/eic'
         customerEic:
           $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
+        meterEics:
+          type: array
+          items:
+            $ref: '#/components/schemas/eic'
         dataPeriodStart:
           $ref: '#/components/schemas/dateTime'
         dataPeriodEnd:
           $ref: '#/components/schemas/dateTime'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
         unread:
           type: boolean
+      required:
+        - commodityType
+        - createdTimeFrom
+        - createdTimeTo
     jointInvoiceListItem:
       type: object
       properties:
         invoiceId:
           $ref: '#/components/schemas/uniqueId'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        createdTime:
+          $ref: '#/components/schemas/dateTime'
         senderEic:
           $ref: '#/components/schemas/eic'
-        timestamp:
-          $ref: '#/components/schemas/dateTime'
         receiverEic:
           $ref: '#/components/schemas/eic'
         customerEic:
           $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
+        meterEics:
+          type: array
+          items:
+            $ref: '#/components/schemas/eic'
         dataPeriodStart:
           $ref: '#/components/schemas/dateTime'
         dataPeriodEnd:
@@ -538,11 +343,12 @@ components:
           type: boolean
       required:
         - invoiceId
+        - commodityType
         - timestamp
         - senderEic
         - receiverEic
         - customerEic
-        - meterEic
+        - meterEics
         - dataPeriodStart
         - dataPeriodEnd
         - unread
@@ -555,66 +361,28 @@ components:
           $ref: '#/components/schemas/eic'
         customerEic:
           $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        meterEics:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/eic'
         dataPeriodStart:
           $ref: '#/components/schemas/dateTime'
         dataPeriodEnd:
           $ref: '#/components/schemas/dateTime'
+        fileName:
+          type: string
       required:
         - senderEic
         - receiverEic
         - customerEic
-        - meterEic
+        - commodityType
+        - meterEics
         - dataPeriodStart
         - dataPeriodEnd
-    jointInvoice:
-      type: object
-      properties:
-        jointInvoiceHeaders:
-          $ref: '#/components/schemas/jointInvoiceHeaders'
-        invoice:
-          type: string
-          format: binary
-      required:
-        - jointInvoiceHeaders
-        - invoice
-    jointInvoiceHeadersUpdate:
-      type: object
-      properties:
-        invoiceId:
-          $ref: '#/components/schemas/uniqueId'
-        senderEic:
-          $ref: '#/components/schemas/eic'
-        receiverEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        dataPeriodStart:
-          $ref: '#/components/schemas/dateTime'
-        dataPeriodEnd:
-          $ref: '#/components/schemas/dateTime'
-      required:
-        - invoiceId
-        - senderEic
-        - receiverEic
-        - customerEic
-        - meterEic
-        - dataPeriodStart
-        - dataPeriodEnd
-    jointInvoiceUpdate:
-      type: object
-      properties:
-        jointInvoiceHeadersUpdate:
-          $ref: '#/components/schemas/jointInvoiceHeadersUpdate'
-        invoice:
-          type: string
-          format: binary
-      required:
-        - jointInvoiceHeaders
-        - invoice
+        - fileName
     marketParticipantContext:
       type: object
       properties:
@@ -622,9 +390,6 @@ components:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
           $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:
@@ -654,6 +419,30 @@ components:
         totalPages:
           type: integer
           minimum: 1
+    invoiceResponse:
+      type: object
+      description: Invoice response
+      properties:
+        invoiceId:
+          $ref: '#/components/schemas/uniqueId'
+        fileName:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+    createJointInvoiceResponse:
+      type: object
+      description: Create joint invoice response
+      properties:
+        successful:
+          type: array
+          items:
+            $ref: '#/components/schemas/invoiceResponse'
+        unsuccessful:
+          type: array
+          items:
+            $ref: '#/components/schemas/invoiceResponse'
     badRequest:
       type: object
       description: Bad Request
@@ -813,4 +602,4 @@ components:
 servers:
   - url: https://test-datahub.elering.ee
 security:
-  - JWTAuth: []
+  - JWTAuth: [ ]

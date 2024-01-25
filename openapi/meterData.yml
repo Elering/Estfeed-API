@@ -1,18 +1,18 @@
 openapi: 3.0.3
 info:
-  title: Eic
-  version: 0.1.0
-  description: API to create EIC ranges, get unused EICs, and verify EICs.
+  title: MeterData
+  version: 0.3.0
+  description: API to create, read, and update meter readings.
 tags:
-  - name: Eic
-    description: API to create, read, and update customer information.
+  - name: MeterData
+    description: API to create, read, and update meter data.
 paths:
-  /api/v1/eic/range:
+  /api/v1/meter-data/search:
     post:
       tags:
-        - Eic
-      operationId: get-eic-from-range
-      summary: Get a list of unused EICs from a range
+        - MeterData
+      operationId: get-meter-data
+      summary: Find meter data by meter and customer EIC, period, and optionally resolution
       security:
         - JWTAuth: [ ]
       parameters:
@@ -34,113 +34,27 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
-                eicRangeItems:
-                  type: object
-                  properties:
-                    eicRangeStart:
-                      $ref: '#/components/schemas/eic'
-                    eicRangeEnd:
-                      $ref: '#/components/schemas/eic'
-                    count:
-                      type: integer
-                      minimum: 1
-                      maximum: 100
+                meterEic:
+                  $ref: '#/components/schemas/eic'
+                periodStart:
+                  $ref: '#/components/schemas/dateTime'
+                periodEnd:
+                  $ref: '#/components/schemas/dateTime'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
-                - eicRangeItems
+                - meterEic
+                - periodStart
+                - pagination
       description: >-
-        Submit the EIC range borders and desired number of unique codes to receive a list of unused EICs
+        Submit the meter identifications, timeframe to receive the meter reading data
       responses:
         '200':
           description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/eic'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/eic/range/create:
-    post:
-      tags:
-        - Eic
-      operationId: create-eic-range
-      summary: Create an EIC range for a given operation type
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                eicRange:
-                  type: object
-                  properties:
-                    serviceProviderEic:
-                      $ref: '#/components/schemas/eic'
-                    eicRangeType:
-                      type: string
-                      description: EIC code types
-                      enum: [ METERING_POINT, RESOURCE_OBJECT ]
-                  required:
-                    - serviceProviderEic
-                    - eicRangeType
-              required:
-                - marketParticipantContext
-                - eicRange
-      description: >-
-        Submit an operation type to receive a new EIC range
-      responses:
-        '201':
-          description: Created
           headers:
             status:
               description: HTTP status code
@@ -163,90 +77,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  eicRangeStart:
+                  meterEic:
                     $ref: '#/components/schemas/eic'
-                  eicRangeEnd:
-                    $ref: '#/components/schemas/eic'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/eic/verify:
-    post:
-      tags:
-        - Eic
-      operationId: verify-eics
-      summary: Verify an EIC
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                eic:
-                  type: array
-                  minItems: 1
-                  items:
-                    $ref: '#/components/schemas/eic'
-              required:
-                - marketParticipantContext
-                - eic
-      description: >-
-        Submit an EIC for verification
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    eic:
-                      $ref: '#/components/schemas/eic'
-                    result:
-                      type: boolean
+                  commodityType:
+                    $ref: '#/components/schemas/commodityType'
+                  periods:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/period'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - meterEic
+                  - period
+                  - pagination
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -257,12 +102,12 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/eic/verify/create:
+  /api/v1/meter-data:
     post:
       tags:
-        - Eic
-      operationId: generate-eic-check
-      summary: Generate EIC check character
+        - MeterData
+      operationId: create-meter-data
+      summary: Create or update meter reading data
       security:
         - JWTAuth: [ ]
       parameters:
@@ -284,20 +129,91 @@ paths:
           application/json:
             schema:
               type: object
-              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
-                eicWithoutCheck:
+                meterData:
                   type: array
                   minItems: 1
                   items:
-                    $ref: '#/components/schemas/eicWithoutCheck'
+                    $ref: '#/components/schemas/meterData'
               required:
                 - marketParticipantContext
-                - eicWithoutCheck
+                - meterData
+        description: >-
+          Submit the meter reading data object to create the meter reading
+      responses:
+        '201':
+          description: Created
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter-data/status:
+    post:
+      tags:
+        - MeterData
+      operationId: get-meter-data-status
+      summary: Find meter data processing status by document and issuer identification
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterDataStatusAttributes:
+                  $ref: '#/components/schemas/meterDataStatusAttributes'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - meterDataStatusAttributes
+                - pagination
       description: >-
-        Submit an EIC for verification
+        Submit the sender and document identification to receive the processing status
       responses:
         '200':
           description: OK
@@ -321,60 +237,159 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
+                type: object
+                properties:
+                  meterDataStatuses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/meterDataStatus'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - meterDataStatuses
+                  - pagination
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter-data/change:
+    post:
+      tags:
+        - MeterData
+      operationId: get-meter-data-change
+      summary: Find metering points where data was changed within the defined period - NOT IMPLEMENTED
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                updatePeriodStart:
+                  $ref: '#/components/schemas/dateTime'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - updatePeriodStart
+                - pagination
+      description: >-
+        Submit the modification period to receive a list of metering points where data has changed during the marked time interval
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meterEic:
+                    $ref: '#/components/schemas/eic'
+                  commodityType:
+                    $ref: '#/components/schemas/commodityType'
+                  periods:
+                    type: array
+                    minItems: 1
+                    items:
+                      $ref: '#/components/schemas/period'
+                  pagination:
+                    $ref: '#/components/schemas/pagingResponse'
+                required:
+                  - meterEic
+                  - period
+                  - pagination
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/meter-data/export:
+    post:
+      tags:
+        - MeterData
+      operationId: export-meter-data
+      summary: Export meter data by meter and customer EIC, period, and resolution
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterEic:
                   $ref: '#/components/schemas/eic'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/eic:
-    post:
-      tags:
-        - Eic
-      operationId: create-eic
-      summary: Create an EIC
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              x-implements: [ 'ee.elering.estfeed.opp.api.mpc.WithMarketParticipantContext' ]
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                eicAttributes:
-                  type: array
-                  minItems: 1
-                  items:
-                    $ref: '#/components/schemas/eicAttributes'
+                periodStart:
+                  $ref: '#/components/schemas/dateTime'
+                periodEnd:
+                  $ref: '#/components/schemas/dateTime'
+                pagination:
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
-                - eicAttributes
       description: >-
-        Submit attributes for EIC creation
+        Submit the meter identifications, timeframe to receive the meter reading data in excel
       responses:
         '200':
           description: OK
@@ -396,16 +411,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/uniqueId'
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    displayName:
-                      $ref: '#/components/schemas/displayName'
-                    eic:
-                      $ref: '#/components/schemas/eic'
+                # a binary file of any type
+                type: string
+                format: binary
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -448,129 +458,97 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    eicWithoutCheck:
-      type: string
-      description: EIC code without check character
-      minLength: 15
-      maxLength: 15
-      # RegEx to verify the EIC format of the first 15 characters
-      pattern: >-
-        \d{2}[XYZWTVA][A-Z0-9\-]{12}
-    email:
-      type: string
-      format: email
-      description: E-mail address
-      # RegEx to verify the e-mail format (RFC 5322)
-      pattern: >-
-        (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
-    displayName:
-      type: string
-      minLength: 1
-      maxLength: 16
-    acerCode:
-      type: string
-      format: acer
-      description: ACER code
-      minLength: 12
-      maxLength: 12
-      pattern: >-
-        A[0-9]{7}[A-Z0-9]\.(AT|BE|BG|CY|CZ|DE|DK|EE|ES|FI|FR|GR|HR|HU|IE|IT||LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|UK)
-    eicCodeType:
-      type: string
-      description: EIC code types
-      enum: [ PARTY, AREA, METERING_POINT, RESOURCE_OBJECT, TIE_LINE, LOCATION, SUBSTATION ]
-    eicFunctionType:
-      type: string
-      description: EIC function types
-      enum: [ BALANCE_RESPONSIBLE_PARTY, ENERGY_SUPPLIER, BALANCING_SERVICE_PROVIDER, CAPACITY_TRADER, CONSUMER, COORDINATION_CENTER_OPERATOR, GRID_ACCESS_PROVIDER, GRID_OPERATOR, IMBALANCE_SETTLEMENT_RESPONSIBLE, INFORMATION_PROVIDER, INTERCONNECTION_TRADE_RESPONSIBLE, MARKET_OPERATOR, METER_ADMINISTRATOR, METERED_DATA_RESPONSIBLE, METERING_POINT_ADMINISTRATOR, NOMINATION_VALIDATOR, PARTY_CONNECTED_TO_GRID, PRODUCER, PRODUCTION_RESPONSIBLE_PARTY, PROFILE_MAINTENANCE_PARTY, RESOURCE_PROVIDER, RESOURCE_CAPACITY_MECHANISM_OPERATOR, STORAGE_SYSTEM_OPERATOR, SYSTEM_OPERATOR, TRADE_RESPONSIBLE_PARTY, TRANSMISSION_CAPACITY_ALLOCATOR, LNG_SYSTEM_OPERATOR, DISTRIBUTION_SYSTEM_OPERATOR, NETWORK_USER, PLATFORM_OPERATOR, MARKET_AREA_OPERATOR, MEASUREMENT_SERVICE_PROVIDER, METERING_POINT_OPERATOR, METERED_DATA_AGGREGATOR, BALANCE_GROUP_RESPONSIBLE_PARTY, BALANCE_GROUP, BIDDING_ZONE, BORDER_AREA, CONTROL_AREA, SYNCHRONOUS_AREA, COORDINATION_CENTER_ZONE, ITC, LOCAL_MARKET_AREA, MARKET_BALANCE_AREA, MARKET_AREA, REGIONAL_OUTAGE_AREA, MEMBER_STATE, ACCOUNTING_POINT, METERING_POINT, CONNECTION_POINT, VIRTUAL_TRADING_POINTS, VIRTUAL_INTERCONNECTION_POINTS, BUSBAR_COUPLER, INTERNAL_LINE, INTERNAL_TIE_LINE, TIELINE, TRANSFORMER, COMPRESSOR_STATION, FLOW_CONTROL_STATION, GAS_TREATMENT_FACILITY, ODORIZATION_FACILITY, LOCATION, CAPACITY_BANK, GENERATION, GENERATION_UNIT, LNG_PLANT, LOAD, PRODUCTION_UNIT, REACTANCE_BANK, RESOURCE_OBJECT, STORAGE_PLANT, PRODUCTION_PLANT, GAS_STORAGE_FACILITY, LNG_TERMINAL, RESOURCE_CAPACITY_MARKET_UNIT, CORRIDOR, ENDPOINT, IT_SYSTEM, SUBSTATION, PASSIVE_NODE, CONSUMPTION_RESPONSIBLE_PARTY, DISTRIBUTION_NETWORK_AREA, METERING_GRID_AREA, SCHEDULING_AREA, LFC_AREA, LFC_BLOCK, OUTAGE_COORDINATION_REGION, EXCHANGE_POINT, RESOURCE_AGGREGATOR, FRR_SHARING_REGION, BUSBAR, DYNAMIC_REACTIVE_POWER_DEVICE, HARMONIC_FILTER, SHUNT_REACTOR, ROTATING_PHASE_SHIFTER, IT_TOPIC ]
-    serviceProviderRole:
-      type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
-    eicAttributes:
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
+    status:
       type: object
       properties:
-        eicType:
-          $ref: '#/components/schemas/eicCodeType'
-        longName:
+        originalDocumentIdentification:
+          $ref: '#/components/schemas/uniqueId'
+        statusCode:
+          $ref: '#/components/schemas/statusCode'
+        reasonText:
           type: string
-          maxLength: 70
-        displayName:
-          $ref: '#/components/schemas/displayName'
-        contactName:
-          type: string
-          maxLength: 70
-        contactPhone:
-          type: string
-          maxLength: 15
-        contactEmail:
-          $ref: '#/components/schemas/email'
-        location:
-          $ref: '#/components/schemas/location'
-        acerCode:
-          $ref: '#/components/schemas/acerCode'
-        vatCode:
-          type: string
-          maxLength: 25
-        eicParent:
+          description: Textual reason of the response
+    readingType:
+      type: string
+      description: Meter reading quality type
+      enum: [ E, M ]
+    resolution:
+      type: string
+      enum: [ PT15M, PT1H, P1D ]
+    meterData:
+      type: object
+      properties:
+        meterEic:
           $ref: '#/components/schemas/eic'
-        eicResponsible:
-          $ref: '#/components/schemas/eic'
-        functions:
+        periods:
           type: array
           minItems: 1
           items:
-            $ref: '#/components/schemas/eicFunctionType'
+            $ref: '#/components/schemas/period'
       required:
-        - eicType
-        - longName
-        - displayName
-        - contactName
-        - contactPhone
-        - contactEmail
-        - functions
-    location:
+        - meterEic
+    period:
       type: object
-      description: Location object
       properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
-        county:
-          type: string
-          maxLength: 100
-        municipality:
-          type: string
-          maxLength: 100
-        locality:
-          type: string
-          maxLength: 100
-        localAddress:
-          type: string
-          maxLength: 100
-        postalCode:
-          type: integer
-          minimum: 10000
-          maximum: 99999
-        longitude:
-          type: number
-          format: decimal
-        latitude:
-          type: number
-          format: decimal
+        r:
+          $ref: '#/components/schemas/resolution'
+        aI:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/accountInterval'
       required:
-        - adsId
-        - county
-        - municipality
-        - locality
-        - localAddress
-        - postalCode
+        - r
+        - aI
+    accountInterval:
+      type: object
+      description: Meter reading period item
+      properties:
+        pS:
+          $ref: '#/components/schemas/dateTime'
+        inQty:
+          $ref: '#/components/schemas/measurement'
+        outQty:
+          $ref: '#/components/schemas/measurement'
+      required:
+        - pS
+    measurement:
+      type: object
+      description: Measurement result
+      properties:
+        rTime:
+          $ref: '#/components/schemas/dateTime'
+        rType:
+          $ref: '#/components/schemas/readingType'
+        kwh:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+        m3:
+          type: number
+          format: decimal
+          minimum: 0
+          multipleOf: 0.001
+    getMeterData:
+      type: object
+      description: Attributes to request meter readings
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - meterEic
+        - periodStart
     marketParticipantContext:
       type: object
       properties:
@@ -584,6 +562,37 @@ components:
         - marketParticipantIdentification
         - marketParticipantRole
         - commodityType
+    meterDataCommonResponse:
+      type: object
+      description: Common meter data metadata
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - meterEic
+    pagingRequest:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - page
+        - pageSize
+    pagingResponse:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 1
     badRequest:
       type: object
       description: Bad Request
@@ -624,6 +633,42 @@ components:
           type: string
         cause:
           $ref: '#/components/schemas/defaultProblem'
+    meterDataStatusAttributes:
+      type: object
+      properties:
+        originalDocumentIdentification:
+          type: string
+          format: uuid
+        createdTimeFrom:
+          $ref: '#/components/schemas/dateTime'
+        createdTimeTo:
+          $ref: '#/components/schemas/dateTime'
+        status:
+          type: string
+          enum: [ PROCESSING, SUCCESSFUL, ERROR ]
+      required:
+        - createdTimeFrom
+        - createdTimeTo
+    meterDataStatus:
+      type: object
+      properties:
+        originalDocumentIdentification:
+          type: string
+          format: uuid
+        senderEic:
+          $ref: '#/components/schemas/eic'
+        createdTime:
+          $ref: '#/components/schemas/dateTime'
+        status:
+          type: string
+          enum: [ PROCESSING, SUCCESSFUL, ERROR ]
+        statusMessage:
+          type: string
+      required:
+        - originalDocumentIdentification
+        - senderEic
+        - createdTime
+        - status
   headers:
     status:
       deprecated: false

@@ -1,0 +1,524 @@
+openapi: 3.0.3
+info:
+  title: ConnectionState
+  version: 0.3.0
+  description: API to create and read connection state changes.
+tags:
+  - name: ConnectionState
+    description: API to create and read connection state changes.
+paths:
+  /api/v1/connection-state/initiate:
+    post:
+      tags:
+        - ConnectionState
+      operationId: initiate-connection-state-change
+      summary: Initiate connection state change.
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                connectionStateInitiationList:
+                  $ref: '#/components/schemas/connectionStateInitiationList'
+              required:
+                - marketParticipantContext
+                - connectionStateInitiationList
+      responses:
+        '201':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: 'common.yml#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectionStateInitiationResponse:
+                    $ref: '#/components/schemas/connectionStateInitiationResponse'
+                required:
+                  - connectionStateInitiationResponse
+        "400":
+          $ref: 'common.yml#/components/schemas/badRequest'
+        "401":
+          $ref: 'common.yml#/components/schemas/unauthorized'
+        "403":
+          $ref: 'common.yml#/components/schemas/forbidden'
+        "404":
+          $ref: 'common.yml#/components/schemas/notFound'
+        "422":
+          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+  /api/v1/connection-state/search:
+    post:
+      tags:
+        - ConnectionState
+      operationId: find-connection-states
+      summary: Find connection states.
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                connectionStateAttributes:
+                  $ref: '#/components/schemas/connectionStateAttributes'
+                pagination:
+                  $ref: 'common.yml#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - connectionStateAttributes
+                - pagination
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: 'common.yml#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectionStateList:
+                    $ref: '#/components/schemas/connectionStateList'
+                  pagination:
+                    $ref: 'common.yml#/components/schemas/pagingResponse'
+                required:
+                  - connectionStateList
+                  - pagination
+        "400":
+          $ref: 'common.yml#/components/schemas/badRequest'
+        "401":
+          $ref: 'common.yml#/components/schemas/unauthorized'
+        "403":
+          $ref: 'common.yml#/components/schemas/forbidden'
+        "404":
+          $ref: 'common.yml#/components/schemas/notFound'
+        "422":
+          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+  /api/v1/connection-state/message:
+    post:
+      tags:
+        - ConnectionState
+      operationId: create-connection-state-message
+      summary: Create connection state message
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                connectionStateMessages:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/connectionStateMessage'
+              required:
+                - marketParticipantContext
+                - connectionStateMessages
+      responses:
+        '201':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: 'common.yml#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+        "400":
+          $ref: 'common.yml#/components/schemas/badRequest'
+        "401":
+          $ref: 'common.yml#/components/schemas/unauthorized'
+        "403":
+          $ref: 'common.yml#/components/schemas/forbidden'
+        "404":
+          $ref: 'common.yml#/components/schemas/notFound'
+        "422":
+          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+  /api/v1/connection-state/message-history:
+    post:
+      tags:
+        - ConnectionState
+      operationId: connection-state-message-history
+      summary: Find connection state message history.
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                connectionStateHeaderId:
+                  $ref: '#/components/schemas/connectionStateHeaderId'
+              required:
+                - marketParticipantContext
+                - connectionStateHeaderId
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: 'common.yml#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectionStateMessageHistory:
+                    $ref: '#/components/schemas/connectionStateMessageHistory'
+                required:
+                  - connectionStateMessageHistory
+        "400":
+          $ref: 'common.yml#/components/schemas/badRequest'
+        "401":
+          $ref: 'common.yml#/components/schemas/unauthorized'
+        "403":
+          $ref: 'common.yml#/components/schemas/forbidden'
+        "404":
+          $ref: 'common.yml#/components/schemas/notFound'
+        "422":
+          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>
+  schemas:
+    connectionStateAttributes:
+      type: object
+      properties:
+        createdTimeFrom:
+          $ref: '#/components/schemas/dateTime'
+        createdTimeTo:
+          $ref: '#/components/schemas/dateTime'
+        senderEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        receiverEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        meterEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        customerEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        status:
+          $ref: '#/components/schemas/connectionStatus'
+        connectionStateId:
+          $ref: '#/components/schemas/connectionStateHeaderId'
+        read:
+          $ref: '#/components/schemas/read'
+      required:
+        - createdTimeFrom
+        - createdTimeTo
+    connectionStateList:
+      type: array
+      items:
+        $ref: '#/components/schemas/connectionStates'
+    connectionStates:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/connectionStateHeaderId'
+        meterEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        senderEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        senderMetadata:
+          type: array
+          items:
+            $ref: 'common.yml#/components/schemas/metadata'
+        receiverEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        receiverMetadata:
+          type: array
+          items:
+            $ref: 'common.yml#/components/schemas/metadata'
+        customerEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        customerMetadata:
+          type: array
+          items:
+            $ref: 'common.yml#/components/schemas/metadata'
+        createdTime:
+          $ref: '#/components/schemas/dateTime'
+        latestMessage:
+          $ref: '#/components/schemas/latestMessage'
+      required:
+        - id
+        - meterEic
+        - senderEic
+        - receiverEic
+        - customerEic
+        - createdTime
+        - latestMessage
+    latestMessage:
+      type: object
+      properties:
+        participant:
+          $ref: 'common.yml#/components/schemas/eic'
+        connectionState:
+          $ref: '#/components/schemas/connectionStatus'
+        reason:
+          $ref: '#/components/schemas/connectionStatusReason'
+        preferredDate:
+          $ref: '#/components/schemas/dateTime'
+        estimatedDate:
+          $ref: '#/components/schemas/dateTime'
+        comment:
+          $ref: '#/components/schemas/comment'
+        read:
+          $ref: '#/components/schemas/read'
+        createdTime:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - participant
+        - connectionState
+        - read
+        - createdTime
+    connectionStateInitiationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/connectionStateInitiation'
+    connectionStateMessageHistory:
+      type: array
+      items:
+        $ref: '#/components/schemas/connectionStateHistory'
+    connectionStateHistory:
+      type: object
+      properties:
+        connectionStateHeaderId:
+          $ref: '#/components/schemas/connectionStateHeaderId'
+        createdDate:
+          $ref: 'common.yml#/components/schemas/dateTime'
+        participant:
+          $ref: 'common.yml#/components/schemas/eic'
+        state:
+          $ref: '#/components/schemas/connectionStatus'
+        reason:
+          $ref: '#/components/schemas/connectionStatusReason'
+        preferredDate:
+          $ref: '#/components/schemas/date'
+        estimatedDate:
+          $ref: '#/components/schemas/date'
+        comment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - connectionStateHeaderId
+        - createdDate
+        - participant
+        - state
+    connectionStateInitiationResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/connectionStateInitiationResult'
+    connectionStateInitiation:
+      type: object
+      properties:
+        meterEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        receiverEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        customerEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        initiatedState:
+          $ref: '#/components/schemas/connectionStatus'
+        initiationReason:
+          $ref: '#/components/schemas/connectionStatusReason'
+        preferredDate:
+          $ref: '#/components/schemas/dateTime'
+        comment:
+          $ref: '#/components/schemas/comment'
+      required:
+        - meterEic
+        - receiverEic
+        - customerEic
+        - initiatedState
+        - initiationReason
+        - preferredDate
+    connectionStateInitiationResult:
+      type: object
+      properties:
+        connectionStateHeaderId:
+          $ref: '#/components/schemas/connectionStateHeaderId'
+        meterEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        receiverEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        customerEic:
+          $ref: 'common.yml#/components/schemas/eic'
+        initiatedState:
+          $ref: '#/components/schemas/connectionStatus'
+      required:
+        - connectionStateId
+        - meterEic
+        - receiverEic
+        - customerEic
+        - initiatedState
+    connectionStateHeaderId:
+      type: integer
+      format: int64
+    connectionStateMessage:
+      type: object
+      properties:
+        connectionStateHeaderId:
+          $ref: '#/components/schemas/connectionStateHeaderId'
+        participant:
+          $ref: 'common.yml#/components/schemas/eic'
+        state:
+          $ref: '#/components/schemas/connectionStatus'
+        reason:
+          $ref: '#/components/schemas/connectionStatusReason'
+        preferredDate:
+          $ref: '#/components/schemas/date'
+        estimatedDate:
+          $ref: '#/components/schemas/date'
+        comment:
+          type: string
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    date:
+      type: string
+      format: date
+      description: ISO 8601 date
+    comment:
+      type: string
+    read:
+      type: boolean
+    connectionStatus:
+      type: string
+      enum: [ CONNECT, DISCONNECT, CONNECTED, DISCONNECTED, ALLOWED, CANCELLED, PLANNED, ON_HOLD ]
+    connectionStatusReason:
+      type: string
+      enum: [ DEBT, DEBT_PAID, NEW_AGREEMENT,  FAULT, NO_AGREEMENT, AGREEMENT_END, NO_SPR_MP, GO_DISCONNECTED, CANCELLED_ORDER, NO_CANCEL ]
+servers:
+  - url: https://test-datahub.elering.ee
+security:
+  - JWTAuth: [ ]

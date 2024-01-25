@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: DataDistribution
+  version: 0.3.0
+  description: API to read data distributions.
+tags:
+  - name: DataDistribution
+    description: API to read data distributions.
+paths:
+  /api/v1/data-distribution/search:
+    post:
+      tags:
+        - DataDistribution
+      operationId: find-data-distributions
+      summary: Find data distributions.
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                dataDistributionAttributes:
+                  $ref: '#/components/schemas/dataDistributionAttributes'
+                pagination:
+                  $ref: 'common.yml#/components/schemas/pagingRequest'
+              required:
+                - marketParticipantContext
+                - dataDistributionAttributes
+                - pagination
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: 'common.yml#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: 'common.yml#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dataDistributions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/dataDistributionListItem'
+                  pagination:
+                    $ref: 'common.yml#/components/schemas/pagingResponse'
+                required:
+                  - dataDistributions
+                  - pagination
+        "400":
+          $ref: 'common.yml#/components/schemas/badRequest'
+        "401":
+          $ref: 'common.yml#/components/schemas/unauthorized'
+        "403":
+          $ref: 'common.yml#/components/schemas/forbidden'
+        "404":
+          $ref: 'common.yml#/components/schemas/notFound'
+        "422":
+          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Example:
+        > Authorization: Bearer <token>
+  schemas:
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    resourceType:
+      type: string
+      enum: [ METERING_POINT, METERING_DATA, NETWORK_BILL, JOINT_INVOICE, CUSTOMER, AGREEMENT, REPORT ]
+    dataDistributionAttributes:
+      type: object
+      properties:
+        createdTimeFrom:
+          $ref: '#/components/schemas/dateTime'
+        createdTimeTo:
+          $ref: '#/components/schemas/dateTime'
+        resourceType:
+          $ref: '#/components/schemas/resourceType'
+      required:
+        - createdTimeFrom
+        - createdTimeTo
+        - resourceType
+    dataDistributionListItem:
+      type: object
+      properties:
+        createdTime:
+          $ref: '#/components/schemas/dateTime'
+        lastModifiedTime:
+          $ref: '#/components/schemas/dateTime'
+        resourceType:
+          $ref: '#/components/schemas/resourceType'
+        reason:
+          type: string
+        content:
+          type: object
+servers:
+  - url: https://test-datahub.elering.ee
+security:
+  - JWTAuth: [ ]

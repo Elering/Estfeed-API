@@ -1,19 +1,18 @@
 openapi: 3.0.3
 info:
-  title: GridAgreementMeteringPoint
-  version: 0.1.0
-  description: API to create metering point and grid agreement in one call
+  title: MeteringPoint
+  version: 0.3.0
+  description: API to create, read, and update meter information.
 tags:
-  - name: GridAgreementMeteringPoint
-    description: API to create metering point and grid agreement in one call
+  - name: MeteringPoint
+    description: API to create, read, and update agreements.
 paths:
-  /api/v1/gridagreementmeteringpoint:
+  /api/v1/meter/import:
     post:
       tags:
-        - GridAgreementMeteringPoint
-      operationId: request-agreement-with-meter
-      summary: Create meter with metadata and connected grid agreement
-      deprecated: true
+        - MeteringPoint
+      operationId: import-meter
+      summary: Import meter by attributes
       security:
         - JWTAuth: [ ]
       parameters:
@@ -32,33 +31,23 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
-                gridAgreementMeteringPoint:
-                  type: array
-                  minItems: 1
-                  items:
-                    type: object
-                    properties:
-                      meterMetadata:
-                        $ref: '#/components/schemas/meterMetadata'
-                      agreement:
-                        $ref: '#/components/schemas/agreement'
-                    required:
-                      - meterMetadata
-                      - agreement
-              required:
-                - marketParticipantContext
-                - gridAgreementMeteringPoint
-        description: >-
-          Submit the meter metadata object to create the meter
+                file:
+                  # a binary file of any type
+                  type: string
+                  format: binary
+                  nullable: false
+            encoding:
+              file:
+                contentType: application/octet-stream
       responses:
-        '201':
-          description: Created
+        '200':
+          description: OK
           headers:
             status:
               description: HTTP status code
@@ -79,45 +68,50 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                items:
-                  $ref: '#/components/schemas/agreementCommonResponse'
+                type: object
+                properties:
+                  processed:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/meteringPointEntityResponse'
+                  unprocessed:
+                    type: array
+                    items:
+                      properties:
+                        rowNumber:
+                          type: integer
+                        error:
+                          $ref: '#/components/schemas/errorResponse'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
           $ref: '#/components/responses/unauthorized'
         "403":
           $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
 components:
-  securitySchemes:
-    JWTAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: |-
-        Example:
-        > Authorization: Bearer <token>
   schemas:
-    dateTime:
-      type: string
-      format: date-time
-      description: ISO 8601 zone datetime
-    date:
-      type: string
-      format: date
-      description: ISO 8601 date
-    uniqueId:
-      type: string
-      format: uuid
-      description: UUID
     statusCode:
       type: integer
       description: HTTP status code
       minLength: 3
       maxLength: 3
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
     eic:
       type: string
       format: eic
@@ -127,18 +121,20 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
-    serviceProviderRole:
+    dateTime:
       type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
-    meteringType:
+      format: date-time
+      description: ISO 8601 zone datetime
+    uniqueId:
       type: string
-      enum: [ REMOTE_READING, VIRTUAL, NON_REMOTE_READING ]
-    meteringPointType:
-      type: string
-      enum: [ BORDER, AGGREGATION, REGULAR, INTERNAL ]
+      format: uuid
+      description: UUID
     consumptionScale:
       type: string
       enum: [ SMALL, LARGE ]
@@ -165,8 +161,8 @@ components:
     productionSourceGas:
       type: string
       enum: [ BIOGAS ]
-    transmissionNetwork:
-      type: string
+    transmissionNetworkEic:
+      $ref: '#/components/schemas/eic'
     apartmentAssociation:
       type: boolean
     isolatedMeteringPoint:
@@ -175,6 +171,24 @@ components:
       type: boolean
     chargingPoint:
       type: boolean
+    filterValue:
+      type: number
+      format: decimal
+      minimum: 0
+      multipleOf: 0.01
+    filterType:
+      type: string
+      enum: [ EQUALS, GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN_OR_EQUALS ]
+    doubleFilter:
+      type: object
+      properties:
+        filterValue:
+          $ref: '#/components/schemas/filterValue'
+        filterType:
+          $ref: '#/components/schemas/filterType'
+      required:
+        - filterValue
+        - filterType
     storageCapacity:
       type: number
       format: decimal
@@ -195,51 +209,103 @@ components:
       format: decimal
       minimum: 0
       multipleOf: 0.01
-    meterCommon:
+    meteringType:
+      type: string
+      enum: [ REMOTE_READING, VIRTUAL, NON_REMOTE_READING ]
+    meteringPointType:
+      type: string
+      enum: [ BORDER, AGGREGATION, REGULAR, INTERNAL ]
+    errorMessage:
       type: object
-      description: Common meter metadata
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        queue:
+          type: string
+        traceId:
+          type: string
+        args:
+          type: array
+          items:
+            type: object
+    meteringPointEntityResponse:
+      type: object
+      properties:
+        meteringPoint:
+          $ref: '#/components/schemas/meteringPointAttributes'
+        meterLocation:
+          $ref: '#/components/schemas/meteringPointLocation'
+        electricityCharacteristics:
+          $ref: '#/components/schemas/electricityCharacteristics'
+        naturalGasCharacteristics:
+          $ref: '#/components/schemas/naturalGasCharacteristics'
+        aggregatorCharacteristics:
+          $ref: '#/components/schemas/aggregatorCharacteristics'
+    meteringPointAttributes:
+      type: object
+      description: Common meter metadata after creating metering point
       properties:
         meterEic:
           $ref: '#/components/schemas/eic'
         commodityType:
           $ref: '#/components/schemas/commodityType'
+        ownerExternalId:
+          type: string
+        ownerMarketRole:
+          $ref: '#/components/schemas/serviceProviderRole'
         meteringType:
           $ref: '#/components/schemas/meteringType'
         meteringPointType:
           $ref: '#/components/schemas/meteringPointType'
-      required:
-        - meterEic
-        - commodityType
-        - meteringType
-    agreementCommonResponse:
+        validFrom:
+          $ref: '#/components/schemas/dateTime'
+    meteringPointLocation:
       type: object
-      description: Common meter metadata
+      description: Location object
       properties:
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-        meteringType:
-          $ref: '#/components/schemas/meteringType'
-        meteringPointType:
-          $ref: '#/components/schemas/meteringPointType'
-        meterVersion:
-          type: integer
-          minimum: 1
-        agreementId:
+        adsId:
+          type: string
+          format: ads-oid
+          minLength: 10
+          maxLength: 10
+          pattern: >-
+            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        comment:
+          type: string
+          maxLength: 255
+        county:
+          type: string
+          maxLength: 255
+        municipality:
+          type: string
+          maxLength: 255
+        locality:
+          type: string
+          maxLength: 255
+        streetAddress:
+          type: string
+          maxLength: 255
+        postcode:
           type: string
           maxLength: 50
-        agreementVersion:
-          type: integer
-          minimum: 1
+        latitude:
+          type: number
+          format: double
+          multipleOf: 0.00001
+        longitude:
+          type: number
+          format: double
+          multipleOf: 0.00001
+    aggregatorCharacteristics:
+      type: object
+      description: Aggregator characteristics
+      properties:
+        parentMeterEic:
+          $ref: '#/components/schemas/eic'
       required:
-        - meterEic
-        - commodityType
-        - meteringType
-        - meteringPointType
-        - meterVersion
-        - agreementId
-        - agreementVersion
+        - parentMeterEic
     electricityCharacteristics:
       type: object
       description: Electricity characteristics
@@ -256,8 +322,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceElectricity'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
         isolatedMeteringPoint:
@@ -280,7 +346,7 @@ components:
         - resolution
         - customerType
         - production
-        - transmissionNetwork
+        - transmissionNetworkEic
         - apartmentAssociation
         - isolatedMeteringPoint
         - electricalHeating
@@ -305,8 +371,8 @@ components:
           $ref: '#/components/schemas/production'
         productionSource:
           $ref: '#/components/schemas/productionSourceGas'
-        transmissionNetwork:
-          $ref: '#/components/schemas/transmissionNetwork'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
       required:
@@ -315,99 +381,15 @@ components:
         - resolution
         - customerType
         - production
-        - transmissionNetwork
+        - transmissionNetworkEic
         - apartmentAssociation
-    aggregatorCharacteristics:
-      type: object
-      description: Aggregator characteristics
-      properties:
-        parentMeterEic:
-          $ref: '#/components/schemas/eic'
-      required:
-        - parentMeterEic
-    location:
-      type: object
-      description: Location object
-      properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
-        comment:
-          type: string
-          maxLength: 255
-      required:
-        - adsId
-    meterMetadata:
-      type: object
-      description: >-
-        Meter metadata object (full dataset).
-        All of the following meterMetadata properties are required in the request:
-          - location
-          - meterCommon
-        The following validation needs to be implemented manually. Exactly one of the meterMetadata properties are required in the request:
-          - electricityCharacteristics
-          - naturalGasCharacteristics
-          - aggregatorCharacteristics
-      properties:
-        meterCommon:
-          $ref: '#/components/schemas/meterCommon'
-        location:
-          $ref: '#/components/schemas/location'
-        electricityCharacteristics:
-          $ref: '#/components/schemas/electricityCharacteristics'
-        naturalGasCharacteristics:
-          $ref: '#/components/schemas/naturalGasCharacteristics'
-        aggregatorCharacteristics:
-          $ref: '#/components/schemas/aggregatorCharacteristics'
-      required:
-        - meterCommon
-        - location
-    agreement:
+    errorResponse:
       type: object
       properties:
-        agreementId:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        agreementType:
-          type: string
-          description: Agreement type
-          enum: [ GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE, BORDER_GRID, BORDER_SUPPLY, GENERAL_SERVICE ]
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        preliminaryTerminationFee:
-          type: boolean
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-        validFrom:
-          $ref: '#/components/schemas/dateTime'
-        validTo:
-          $ref: '#/components/schemas/dateTime'
-      required:
-        - agreementType
-        - serviceProviderEic
-        - customerEic
-        - commodityType
-        - validFrom
-    marketParticipantContext:
-      type: object
-      properties:
-        marketParticipantIdentification:
-          $ref: '#/components/schemas/eic'
-        marketParticipantRole:
-          $ref: '#/components/schemas/serviceProviderRole'
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-      required:
-        - marketParticipantIdentification
-        - marketParticipantRole
-        - commodityType
+        id:
+          $ref: '#/components/schemas/uniqueId'
+        cause:
+          $ref: '#/components/schemas/errorMessage'
     badRequest:
       type: object
       description: Bad Request
@@ -564,7 +546,3 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/unprocessableEntity'
-servers:
-  - url: https://test-datahub.elering.ee
-security:
-  - JWTAuth: [ ]

@@ -6,7 +6,7 @@ tags:
   - name: Preload
     description: API to get preload data
 paths:
-  /api/public/preload:
+  /api/v1/preload:
     get:
       tags:
         - Preload
@@ -36,8 +36,13 @@ components:
           description: ISO 8601 zone datetime
         zoneId:
           type: string
+        commodityOffsets:
+          type: object
+          additionalProperties:
+            type: integer
       required:
         - version
         - serverTime
         - buildTime
         - zoneId
+        - commodityOffsets
