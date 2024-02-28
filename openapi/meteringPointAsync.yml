@@ -265,7 +265,7 @@ components:
       type: object
       description: Location object
       properties:
-        adsId:
+        adrId:
           type: string
           format: ads-oid
           minLength: 10

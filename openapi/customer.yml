@@ -48,10 +48,13 @@ paths:
                     $ref: '#/components/schemas/serviceProviderRole'
                 searchCriteria:
                   $ref: '#/components/schemas/searchCriteria'
+                activeOnly:
+                  type: boolean
               required:
                 - marketParticipantContext
                 - customerTypes
                 - searchCriteria
+                - activeOnly
       description: >-
         Submit the customer identity to receive other identities, metadata, and persmissions granted by the customer.
       responses:
@@ -167,7 +170,7 @@ paths:
       tags:
         - Customer
       operationId: update-customer
-      summary: Update customer with metadata - NOT IMPLEMENTED
+      summary: Update customer with metadata
       security:
         - JWTAuth: [ ]
       parameters:
@@ -193,7 +196,7 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 customer:
-                  $ref: '#/components/schemas/identityEntity'
+                  $ref: '#/components/schemas/updateIdentityEntity'
               required:
                 - marketParticipantContext
                 - customer
@@ -222,7 +225,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/identifier'
+                $ref: '#/components/schemas/updateIdentityEntity'
         "400":
           $ref: '#/components/responses/badRequest'
         "401":
@@ -325,8 +328,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -338,14 +339,18 @@ components:
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
     metadataType:
       type: string
-      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, CONTACT_PHONE, CONTACT_EMAIL, ORGANIZATION_NAME ]
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL, ORGANIZATION_NAME, MOBILE_PHONE, BILLING_ADDRESS, BILLING_BANK_NAME,
+              BILLING_BANK_ACCOUNT, BILLING_METHOD ]
+    billingMethod:
+      type: string
+      enum: [ EMAIL, POST, BANK ]
     extensionType:
       type: string
       enum: [ COUNTRY, ISSUER ]
     customerType:
       type: string
       enum: [ PHYSICAL_PERSON, LEGAL_PERSON, ORGANIZATION, MARKET_PARTICIPANT]
-    identityType:
+    customerIdentityType:
       type: string
       enum: [ NAME, EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID ]
     commodityType:
@@ -360,25 +365,50 @@ components:
       properties:
         customerType:
           $ref: '#/components/schemas/customerType'
-        metadata:
+        customerMetadata:
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/identityMetadata'
-        identifiers:
+        customerIdentities:
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/identifier'
       required:
         - customerType
-        - metadata
-        - identifiers
+        - customerMetadata
+        - customerIdentities
+    updateIdentityEntity:
+      type: object
+      description: IdentityEntity object with identity and metadata
+      properties:
+        customerType:
+          $ref: '#/components/schemas/customerType'
+        customerMetadata:
+          type: array
+          minItems: 1
+          items:
+            allOf:
+              - $ref: '#/components/schemas/identityMetadata'
+              - properties:
+                  validFrom:
+                    $ref: '#/components/schemas/dateTime'
+                  validTo:
+                    $ref: '#/components/schemas/dateTime'
+            required:
+              - metadataType
+              - metadataValue
+        customerIdentity:
+          $ref: '#/components/schemas/identifier'
+      required:
+        - customerType
+        - customerIdentity
     searchCriteria:
       type: object
       properties:
         identityType:
-          $ref: '#/components/schemas/identityType'
+          $ref: '#/components/schemas/customerIdentityType'
         identityValue:
           type: string
           maxLength: 250
@@ -393,7 +423,7 @@ components:
       description: Identifier block
       properties:
         identityType:
-          $ref: '#/components/schemas/identityType'
+          $ref: '#/components/schemas/customerIdentityType'
         identityValue:
           type: string
           maxLength: 50

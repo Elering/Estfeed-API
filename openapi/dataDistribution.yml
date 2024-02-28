@@ -27,7 +27,7 @@ paths:
           description: Document unique identification
           required: true
           schema:
-            $ref: 'common.yml#/components/schemas/uniqueId'
+            $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
         content:
@@ -36,11 +36,11 @@ paths:
               type: object
               properties:
                 marketParticipantContext:
-                  $ref: 'common.yml#/components/schemas/marketParticipantContext'
+                  $ref: '#/components/schemas/marketParticipantContext'
                 dataDistributionAttributes:
                   $ref: '#/components/schemas/dataDistributionAttributes'
                 pagination:
-                  $ref: 'common.yml#/components/schemas/pagingRequest'
+                  $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
                 - dataDistributionAttributes
@@ -52,7 +52,7 @@ paths:
             status:
               description: HTTP status code
               schema:
-                $ref: 'common.yml#/components/schemas/statusCode'
+                $ref: '#/components/schemas/statusCode'
             x-document-date-time:
               description: Document creation timestamp
               schema:
@@ -60,11 +60,11 @@ paths:
             x-document-identification:
               description: Document unique identification
               schema:
-                $ref: 'common.yml#/components/schemas/uniqueId'
+                $ref: '#/components/schemas/uniqueId'
             x-original-document-identification:
               description: Request document unique identification
               schema:
-                $ref: 'common.yml#/components/schemas/uniqueId'
+                $ref: '#/components/schemas/uniqueId'
           content:
             application/json:
               schema:
@@ -75,20 +75,20 @@ paths:
                     items:
                       $ref: '#/components/schemas/dataDistributionListItem'
                   pagination:
-                    $ref: 'common.yml#/components/schemas/pagingResponse'
+                    $ref: '#/components/schemas/pagingResponse'
                 required:
                   - dataDistributions
                   - pagination
         "400":
-          $ref: 'common.yml#/components/schemas/badRequest'
+          $ref: '#/components/schemas/badRequest'
         "401":
-          $ref: 'common.yml#/components/schemas/unauthorized'
+          $ref: '#/components/schemas/unauthorized'
         "403":
-          $ref: 'common.yml#/components/schemas/forbidden'
+          $ref: '#/components/schemas/forbidden'
         "404":
-          $ref: 'common.yml#/components/schemas/notFound'
+          $ref: '#/components/schemas/notFound'
         "422":
-          $ref: 'common.yml#/components/schemas/unprocessableEntity'
+          $ref: '#/components/schemas/unprocessableEntity'
 components:
   securitySchemes:
     JWTAuth:
@@ -99,6 +99,15 @@ components:
         Example:
         > Authorization: Bearer <token>
   schemas:
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    statusCode:
+      type: integer
+      description: HTTP status code
+      minLength: 3
+      maxLength: 3
     dateTime:
       type: string
       format: date-time
@@ -132,6 +141,97 @@ components:
           type: string
         content:
           type: object
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    pagingRequest:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - page
+        - pageSize
+    pagingResponse:
+      type: object
+      description: Pagination controls
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 1
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    commodityType:
+      type: string
+      enum: [ ELECTRICITY, NATURAL_GAS ]
+    badRequest:
+      type: object
+      description: Bad Request
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unauthorized:
+      type: object
+      description: Unauthorized
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    forbidden:
+      type: object
+      description: Forbidden
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    notFound:
+      type: object
+      description: Not found
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    unprocessableEntity:
+      type: object
+      description: Unprocessable entity
+      properties:
+        problem:
+          $ref: '#/components/schemas/defaultProblem'
+    defaultProblem:
+      type: object
+      description: Default problem object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        cause:
+          $ref: '#/components/schemas/defaultProblem'
 servers:
   - url: https://test-datahub.elering.ee
 security:

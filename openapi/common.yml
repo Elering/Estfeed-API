@@ -19,8 +19,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -66,7 +64,6 @@ components:
       enum: [ PARTY, AREA, METERING_POINT, RESOURCE_OBJECT, TIE_LINE, LOCATION, SUBSTATION ]
     filterValue:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     filterType:
@@ -87,7 +84,11 @@ components:
         - filterType
     metadataType:
       type: string
-      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME ]
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL, ORGANIZATION_NAME, MOBILE_PHONE, BILLING_ADDRESS, BILLING_BANK_NAME,
+              BILLING_BANK_ACCOUNT, BILLING_METHOD ]
+    billingMethod:
+      type: string
+      enum: [ EMAIL, POST, BANK ]
     metadata:
       type: object
       properties:

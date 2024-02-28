@@ -12,8 +12,7 @@ paths:
       tags:
         - GridAgreementMeteringPoint
       operationId: request-agreement-with-meter
-      summary: Create meter with metadata and connected grid agreement
-      deprecated: true
+      summary: Create meter with metadata and connected grid agreement - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -116,8 +115,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -130,6 +127,10 @@ components:
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
+    agreementType:
+      type: string
+      description: Agreement type (agreement type BORDER_SUPPLY, GENERAL_SERVICE cannot be created manually, do not use them!)
+      enum: [ GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE, BORDER_GRID, BORDER_SUPPLY, GENERAL_SERVICE ]
     serviceProviderRole:
       type: string
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR, ENERGY_SERVICE_PROVIDER ]
@@ -177,22 +178,18 @@ components:
       type: boolean
     storageCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     storageEnergy:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     productionCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     transmissionCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     meterCommon:
@@ -274,21 +271,6 @@ components:
           $ref: '#/components/schemas/productionCapacity'
         transmissionCapacity:
           $ref: '#/components/schemas/transmissionCapacity'
-      required:
-        - consumptionScale
-        - connectionState
-        - resolution
-        - customerType
-        - production
-        - transmissionNetwork
-        - apartmentAssociation
-        - isolatedMeteringPoint
-        - electricalHeating
-        - chargingPoint
-        - storageCapacity
-        - storageEnergy
-        - productionCapacity
-        - transmissionCapacity
     naturalGasCharacteristics:
       type: object
       description: Gas characteristics
@@ -309,38 +291,23 @@ components:
           $ref: '#/components/schemas/transmissionNetwork'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
-      required:
-        - consumptionScale
-        - connectionState
-        - resolution
-        - customerType
-        - production
-        - transmissionNetwork
-        - apartmentAssociation
     aggregatorCharacteristics:
       type: object
       description: Aggregator characteristics
       properties:
         parentMeterEic:
           $ref: '#/components/schemas/eic'
-      required:
-        - parentMeterEic
     location:
       type: object
       description: Location object
       properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        adrId:
+          type: integer
         comment:
           type: string
           maxLength: 255
       required:
-        - adsId
+        - adrId
     meterMetadata:
       type: object
       description: >-
@@ -374,9 +341,7 @@ components:
         meterEic:
           $ref: '#/components/schemas/eic'
         agreementType:
-          type: string
-          description: Agreement type
-          enum: [ GRID, SUPPLY, AGGREGATION, NAMED_SUPPLIER, PORTFOLIO_SUPPLIER, JOINT_INVOICE, BORDER_GRID, BORDER_SUPPLY, GENERAL_SERVICE ]
+          $ref: '#/components/schemas/agreementType'
         serviceProviderEic:
           $ref: '#/components/schemas/eic'
         customerEic:

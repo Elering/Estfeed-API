@@ -2,15 +2,15 @@ openapi: 3.0.3
 info:
   title: CustomerAuthorization
   version: 0.1.0
-  description: API to read customer authorizations
+  description: API to access customer authorization
 tags:
   - name: CustomerAuthorization
-    description: API to read customer authorizations
+    description: API to access customer authorization
 paths:
   /api/v1/customer-authorization/search:
     post:
       tags:
-        - Customer authorization
+        - CustomerAuthorization
       operationId: get-customer-authorization
       summary: Search for customer authorization
       security:
@@ -94,77 +94,6 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/customer-authorization/change:
-    post:
-      tags:
-        - CustomerAuthorization
-      operationId: get-customer-authorization-changes
-      summary: Find changes in authorizations granted by customers
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                updatePeriodStart:
-                  $ref: '#/components/schemas/dateTime'
-              required:
-                - marketParticipantContext
-                - updatePeriodStart
-      description: >-
-        Submit the service provider (as part of the marketParticipantContext) and the start datetime to receive periodic changes of customer authorizations.
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/customerAuthorization'
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
 components:
   securitySchemes:
     JWTAuth:
@@ -186,8 +115,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -197,102 +124,41 @@ components:
       # RegEx to verify the EIC format, semantic verification is part of content validation
       pattern: >-
         \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    marketParticipantRole:
+    serviceProviderRole:
       type: string
       enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
     commodityType:
       type: string
-      enum: [ELECTRICITY, NATURAL_GAS]
+      enum: [ ELECTRICITY, NATURAL_GAS ]
     customerType:
       type: string
       enum: [ PHYSICAL_PERSON, LEGAL_PERSON, ORGANIZATION, MARKET_PARTICIPANT ]
-    identityType:
-      type: string
-      enum: [ NAME, EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID ]
     metadataType:
       type: string
-      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME, PHONE, EMAIL ]
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL, ORGANIZATION_NAME, MOBILE_PHONE, BILLING_ADDRESS, BILLING_BANK_NAME,
+              BILLING_BANK_ACCOUNT, BILLING_METHOD ]
+    billingMethod:
+      type: string
+      enum: [ EMAIL, POST, BANK ]
     extensionType:
       type: string
       enum: [ COUNTRY, ISSUER ]
-    customerAuthorizationAttributes:
-      type: object
-      description: Search attributes object
-      properties:
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodStart:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodEnd:
-          $ref: '#/components/schemas/dateTime'
-    customerAuthorization:
-      type: object
-      description: Customer authorization object
-      properties:
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodStart:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodEnd:
-          $ref: '#/components/schemas/dateTime'
-      required:
-        - customerEic
-        - meterEic
-        - periodStart
-        - periodEnd
-        - subjectPeriodStart
-        - subjectPeriodEnd
+    customerAuthorizationIdentityType:
+      type: string
+      enum: [ NAME, EIC, PERSONAL_ID, COMPANY_ID, DOCUMENT_ID, EMBASSY_ID ]
     marketParticipantContext:
       type: object
       properties:
         marketParticipantIdentification:
           $ref: '#/components/schemas/eic'
         marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/serviceProviderRole'
         commodityType:
           $ref: '#/components/schemas/commodityType'
       required:
         - marketParticipantIdentification
         - marketParticipantRole
         - commodityType
-    customerAuthorizations:
-      type: object
-      properties:
-        customerType:
-          $ref: '#/components/schemas/customerType'
-        customerIdentifiers:
-          type: array
-          items:
-            $ref: '#/components/schemas/identifier'
-        customerMetadata:
-          type: array
-          items:
-            $ref: '#/components/schemas/identityMetadata'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodStart:
-          $ref: '#/components/schemas/dateTime'
-        subjectPeriodEnd:
-          $ref: '#/components/schemas/dateTime'
     identityMetadata:
       type: object
       properties:
@@ -313,7 +179,7 @@ components:
       description: Identifier block
       properties:
         identityType:
-          $ref: '#/components/schemas/identityType'
+          $ref: '#/components/schemas/customerAuthorizationIdentityType'
         identityValue:
           type: string
           maxLength: 50
@@ -332,6 +198,29 @@ components:
       required:
         - extensionType
         - extensionValue
+    customerAuthorizations:
+      type: object
+      properties:
+        customerType:
+          $ref: '#/components/schemas/customerType'
+        customerIdentities:
+          type: array
+          items:
+            $ref: '#/components/schemas/identifier'
+        customerMetadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/identityMetadata'
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+        subjectPeriodStart:
+          $ref: '#/components/schemas/dateTime'
+        subjectPeriodEnd:
+          $ref: '#/components/schemas/dateTime'
     badRequest:
       type: object
       description: Bad Request

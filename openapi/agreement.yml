@@ -96,6 +96,87 @@ paths:
           $ref: '#/components/responses/notFound'
         "422":
           $ref: '#/components/responses/unprocessableEntity'
+  /api/v1/agreement/search/meter:
+    post:
+      tags:
+        - Agreement
+      operationId: get-agreement-meter
+      summary: Gives back all the relevant agreements of a Metering Point.
+      security:
+        - JWTAuth: [ ]
+      parameters:
+        - in: header
+          name: x-document-date-time
+          description: Document creation timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/dateTime'
+        - in: header
+          name: x-document-identification
+          description: Document unique identification
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marketParticipantContext:
+                  $ref: '#/components/schemas/marketParticipantContext'
+                meterEic:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/eic'
+              required:
+                - marketParticipantContext
+                - meterEic
+      description: >-
+        Gives back all the relevant agreements of a Metering Point.
+        Required in the request:
+          - marketParticipantContext
+          - meterEic
+      responses:
+        '200':
+          description: OK
+          headers:
+            status:
+              description: HTTP status code
+              schema:
+                $ref: '#/components/schemas/statusCode'
+            x-document-date-time:
+              description: Document creation timestamp
+              schema:
+                $ref: '#/components/schemas/dateTime'
+            x-document-identification:
+              description: Document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+            x-original-document-identification:
+              description: Request document unique identification
+              schema:
+                $ref: '#/components/schemas/uniqueId'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meteringPoints:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/meteringPoint'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthorized'
+        "403":
+          $ref: '#/components/responses/forbidden'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "422":
+          $ref: '#/components/responses/unprocessableEntity'
   /api/v1/agreement:
     post:
       tags:
@@ -459,7 +540,7 @@ components:
         Example:
         > Authorization: Bearer <token>
   schemas:
-    identityType:
+    agreementIdentityType:
       type: string
       enum: [ EIC, PERSONAL_ID, DOCUMENT_ID, COMPANY_ID, EMBASSY_ID ]
     identityExtension:
@@ -475,7 +556,11 @@ components:
       enum: [ COUNTRY ]
     metadataType:
       type: string
-      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME, CONTACT_PHONE, EMAIL ]
+      enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, PHONE, EMAIL, ORGANIZATION_NAME, MOBILE_PHONE, BILLING_ADDRESS, BILLING_BANK_NAME,
+              BILLING_BANK_ACCOUNT, BILLING_METHOD ]
+    billingMethod:
+      type: string
+      enum: [ EMAIL, POST, BANK ]
     metadata:
       type: object
       properties:
@@ -499,7 +584,7 @@ components:
         identityValue:
           type: string
         identityType:
-          $ref: '#/components/schemas/identityType'
+          $ref: '#/components/schemas/agreementIdentityType'
         identityExtension:
           type: array
           items:
@@ -519,8 +604,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -592,6 +675,43 @@ components:
         - serviceProviderEic
         - customerEic
         - commodityType
+        - validFrom
+    meterAgreement:
+      type: object
+      properties:
+        agreementId:
+          type: string
+          maxLength: 50
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreementType:
+          $ref: '#/components/schemas/agreementType'
+        serviceProvider:
+          type: object
+          properties:
+            serviceProviderEic:
+              $ref: '#/components/schemas/eic'
+            serviceProviderName:
+              type: string
+        customer:
+          type: object
+          properties:
+            customerEic:
+              $ref: '#/components/schemas/eic'
+            customerName:
+              type: string
+        preliminaryTerminationFee:
+          type: boolean
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        validFrom:
+          $ref: '#/components/schemas/dateTime'
+        validTo:
+          $ref: '#/components/schemas/dateTime'
+      required:
+        - agreementType
+        - serviceProvider
+        - customer
         - validFrom
     deleteAgreement:
       type: object
@@ -712,6 +832,15 @@ components:
       required:
         - commodityType
         - activeOnly
+    meteringPoint:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        agreements:
+          type: array
+          items:
+            $ref: '#/components/schemas/meterAgreement'
     createAgreementRequest:
       type: object
       properties:

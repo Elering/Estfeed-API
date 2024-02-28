@@ -587,8 +587,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -612,7 +610,7 @@ components:
       enum: [ BORDER, AGGREGATION, REGULAR, INTERNAL ]
     sourceType:
       type: string
-      enum: [ AGREEMENT, PERMISSION, OWNERSHIP ]
+      enum: [ AGREEMENT, PERMISSION, OWNERSHIP, BALANCE_STATE ]
     consumptionScale:
       type: string
       enum: [ SMALL, LARGE ]
@@ -654,7 +652,6 @@ components:
       type: boolean
     filterValue:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     filterType:
@@ -672,22 +669,18 @@ components:
         - filterType
     storageCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     storageEnergy:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     productionCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     transmissionCapacity:
       type: number
-      format: decimal
       minimum: 0
       multipleOf: 0.01
     meterCommon:
@@ -836,6 +829,52 @@ components:
           $ref: '#/components/schemas/productionCapacity'
         transmissionCapacity:
           $ref: '#/components/schemas/transmissionCapacity'
+    createElectricityCharacteristics:
+      type: object
+      description: Electricity characteristics
+      properties:
+        consumptionScale:
+          $ref: '#/components/schemas/consumptionScale'
+        connectionState:
+          $ref: '#/components/schemas/connectionState'
+        resolution:
+          $ref: '#/components/schemas/resolutionElectricity'
+        customerType:
+          $ref: '#/components/schemas/customerTypeElectricity'
+        production:
+          $ref: '#/components/schemas/production'
+        productionSource:
+          $ref: '#/components/schemas/productionSourceElectricity'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
+        isolatedMeteringPoint:
+          $ref: '#/components/schemas/isolatedMeteringPoint'
+        electricalHeating:
+          $ref: '#/components/schemas/electricalHeating'
+        chargingPoint:
+          $ref: '#/components/schemas/chargingPoint'
+        storageCapacity:
+          $ref: '#/components/schemas/storageCapacity'
+        storageEnergy:
+          $ref: '#/components/schemas/storageEnergy'
+        productionCapacity:
+          $ref: '#/components/schemas/productionCapacity'
+        transmissionCapacity:
+          $ref: '#/components/schemas/transmissionCapacity'
+      required:
+        - consumptionScale
+        - connectionState
+        - resolution
+        - customerType
+        - production
+        - productionSource
+        - transmissionNetworkEic
+        - apartmentAssociation
+        - isolatedMeteringPoint
+        - electricalHeating
+        - chargingPoint
     updateElectricityCharacteristics:
       type: object
       description: Electricity characteristics
@@ -925,6 +964,35 @@ components:
           $ref: '#/components/schemas/transmissionNetworkEic'
         apartmentAssociation:
           $ref: '#/components/schemas/apartmentAssociation'
+    createNaturalGasCharacteristics:
+      type: object
+      description: Gas characteristics
+      properties:
+        consumptionScale:
+          $ref: '#/components/schemas/consumptionScale'
+        connectionState:
+          $ref: '#/components/schemas/connectionState'
+        resolution:
+          $ref: '#/components/schemas/resolutionGas'
+        customerType:
+          $ref: '#/components/schemas/customerTypeGas'
+        production:
+          $ref: '#/components/schemas/production'
+        productionSource:
+          $ref: '#/components/schemas/productionSourceGas'
+        transmissionNetworkEic:
+          $ref: '#/components/schemas/transmissionNetworkEic'
+        apartmentAssociation:
+          $ref: '#/components/schemas/apartmentAssociation'
+      required:
+        - consumptionScale
+        - connectionState
+        - resolution
+        - customerType
+        - production
+        - productionSource
+        - transmissionNetworkEic
+        - apartmentAssociation
     updateNaturalGasCharacteristics:
       type: object
       description: Gas characteristics
@@ -972,6 +1040,14 @@ components:
       properties:
         parentMeterEic:
           $ref: '#/components/schemas/eic'
+    createAggregatorCharacteristics:
+      type: object
+      description: Aggregator characteristics
+      properties:
+        parentMeterEic:
+          $ref: '#/components/schemas/eic'
+      required:
+        - parentMeterEic
     updateAggregatorCharacteristics:
       type: object
       description: Aggregator characteristics
@@ -985,17 +1061,12 @@ components:
       properties:
         parentMeterEic:
           $ref: '#/components/schemas/eic'
-    location:
+    meterLocation:
       type: object
       description: Location object
       properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        adrId:
+          type: integer
         comment:
           type: string
           maxLength: 255
@@ -1003,13 +1074,8 @@ components:
       type: object
       description: Location object
       properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        adrId:
+          type: integer
         comment:
           type: string
           maxLength: 255
@@ -1043,8 +1109,6 @@ components:
           type: number
           format: double
           multipleOf: 0.00001
-      required:
-        - coordinateSystem
     meterMetadata:
       type: object
       description: Meter metadata object (full dataset).
@@ -1086,11 +1150,11 @@ components:
         meterLocation:
           $ref: '#/components/schemas/meteringPointLocation'
         electricityCharacteristics:
-          $ref: '#/components/schemas/electricityCharacteristics'
+          $ref: '#/components/schemas/createElectricityCharacteristics'
         naturalGasCharacteristics:
-          $ref: '#/components/schemas/naturalGasCharacteristics'
+          $ref: '#/components/schemas/createNaturalGasCharacteristics'
         aggregatorCharacteristics:
-          $ref: '#/components/schemas/aggregatorCharacteristics'
+          $ref: '#/components/schemas/createAggregatorCharacteristics'
       required:
         - meteringPoint
         - meterLocation
@@ -1108,8 +1172,10 @@ components:
           $ref: '#/components/schemas/gasCharacteristicsAttributes'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristicsAttributes'
-        location:
-          $ref: '#/components/schemas/location'
+        meterLocation:
+          $ref: '#/components/schemas/meterLocation'
+        customerEic:
+          $ref: '#/components/schemas/eic'
     meterMetadataResponse:
       type: object
       description: >-
@@ -1131,6 +1197,8 @@ components:
           $ref: '#/components/schemas/naturalGasCharacteristics'
         aggregatorCharacteristics:
           $ref: '#/components/schemas/aggregatorCharacteristics'
+        customerEic:
+          $ref: '#/components/schemas/eic'
       required:
         - meteringPoint
         - location

@@ -308,8 +308,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -325,15 +323,15 @@ components:
     commodityType:
       type: string
       enum: [ ELECTRICITY, NATURAL_GAS ]
-    identityType:
+    authorizationIdentityType:
       type: string
-      enum: [ EIC, PERSONAL_ID, DOCUMENT_ID, COMPANY_ID ]
+      enum: [ EIC, PERSONAL_ID, DOCUMENT_ID, CLIENT_ID ]
     metadataType:
       type: string
       enum: [ FIRST_NAME, LAST_NAME, COMPANY_NAME, ORGANIZATION_NAME]
     extensionType:
       type: string
-      enum: [ COUNTRY ]
+      enum: [ COUNTRY, ISSUER, SERVICE_PROVIDER_EIC ]
     marketParticipantContext:
       type: object
       properties:
@@ -364,30 +362,55 @@ components:
     deleteAuthorization:
       type: object
       properties:
-        authorizationInternalId:
-          $ref: '#/components/schemas/uniqueId'
+        userId:
+          $ref: '#/components/schemas/userId'
+        userRoleInternalIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/uniqueId'
       required:
-        - authorizationInternalId
+        - userId
     userId:
       type: object
       properties:
-        externalId:
-          $ref: '#/components/schemas/eic'
+        identityValue:
+          type: string
+          maxLength: 250
         identityType:
-          $ref: '#/components/schemas/identityType'
+          $ref: '#/components/schemas/authorizationIdentityType'
         identityExtension:
           $ref: '#/components/schemas/identityExtension'
       required:
-        - externalId
+        - identityValue
         - identityType
     userAuthorizationRole:
       type: object
       properties:
         userRole:
           type: string
-          enum: ['ADMIN', 'EDITOR', 'VIEWER', 'EDITOR_METERING_DATA', 'EDITOR_METERING_POINT', 'EDITOR_AGREEMENT', 'VIEWER_METERING_DATA',
-                 'VIEWER_METERING_POINT', 'VIEWER_AGREEMENT', 'VIEWER_AUTHORIZATION', 'EDITOR_AUTHORIZATION', 'VIEWER_CUSTOMER',
-                 'EDITOR_CUSTOMER', 'VIEWER_PERMISSION']
+          enum: [
+            ADMIN,
+            EDITOR,
+            VIEWER,
+            EDITOR_METERING_DATA,
+            VIEWER_METERING_DATA,
+            EDITOR_METERING_POINT,
+            VIEWER_METERING_POINT,
+            EDITOR_AGREEMENT,
+            VIEWER_AGREEMENT,
+            EDITOR_AUTHORIZATION,
+            VIEWER_AUTHORIZATION,
+            EDITOR_CUSTOMER,
+            VIEWER_CUSTOMER,
+            EDITOR_NETWORK_BILL,
+            VIEWER_NETWORK_BILL,
+            EDITOR_JOINT_INVOICE,
+            VIEWER_JOINT_INVOICE,
+            EDITOR_CONNECTION_STATE,
+            VIEWER_CONNECTION_STATE,
+            VIEWER_PERMISSION,
+            VIEWER_DATA_DISTRIBUTION
+          ]
         userRoleInternalId:
           $ref: '#/components/schemas/uniqueId'
       required:

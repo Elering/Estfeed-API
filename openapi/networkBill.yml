@@ -1,102 +1,17 @@
 openapi: 3.0.3
 info:
-  title: Network bill
-  version: 0.2.0
-  description: API to create, read, and update network bill data.
+  title: NetworkBill
+  version: 0.1.0
+  description: API to create, read, and update network bills.
 tags:
-  - name: Network bill
-    description: API to create, read, and update network bill data.
+  - name: NetworkBill
+    description: API to create, read, and update network bills.
 paths:
-  /api/v1/network-bill/search:
-    post:
-      tags:
-        - Network bill
-      operationId: find-network-bill-data
-      summary: Find network bill data by meter EIC, period, and optionally billing sequence
-      security:
-        - JWTAuth: [ ]
-      parameters:
-        - in: header
-          name: x-document-date-time
-          description: Document creation timestamp
-          required: true
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        - in: header
-          name: x-document-identification
-          description: Document unique identification
-          required: true
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                marketParticipantContext:
-                  $ref: '#/components/schemas/marketParticipantContext'
-                meterAttributes:
-                  $ref: '#/components/schemas/meterAttributes'
-                pagination:
-                  $ref: '#/components/schemas/pagingRequest'
-              required:
-                - marketParticipantContext
-                - meterAttributes
-                - pagination
-      description: >-
-        Submit the meter identifications, timeframe, and the purpose to receive the meter reading data
-      responses:
-        '200':
-          description: OK
-          headers:
-            status:
-              description: HTTP status code
-              schema:
-                $ref: '#/components/schemas/statusCode'
-            x-document-date-time:
-              description: Document creation timestamp
-              schema:
-                $ref: '#/components/schemas/dateTime'
-            x-document-identification:
-              description: Document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-            x-original-document-identification:
-              description: Request document unique identification
-              schema:
-                $ref: '#/components/schemas/uniqueId'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  networkBillTimeSeries:
-                    type: array
-                    minItems: 1
-                    items:
-                      $ref: '#/components/schemas/networkBillTimeSeries'
-                  pagination:
-                    $ref: '#/components/schemas/pagingResponse'
-                required:
-                  - networkBillTimeSeries
-                  - pagination
-        "400":
-          $ref: '#/components/responses/badRequest'
-        "401":
-          $ref: '#/components/responses/unauthorized'
-        "403":
-          $ref: '#/components/responses/forbidden'
-        "404":
-          $ref: '#/components/responses/notFound'
-        "422":
-          $ref: '#/components/responses/unprocessableEntity'
   /api/v1/network-bill:
     post:
       tags:
-        - Network bill
-      operationId: request-network-bill-data
+        - NetworkBill
+      operationId: create-network-bill-data
       summary: Create or update network bill data
       security:
         - JWTAuth: [ ]
@@ -123,7 +38,38 @@ paths:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
                 networkBillTimeSeries:
-                  $ref: '#/components/schemas/networkBillTimeSeries'
+                  type: object
+                  title: CreateNetworkBillRequestTimeSeries
+                  allOf:
+                    - $ref: '#/components/schemas/networkBillTimeSeries'
+                    - properties:
+                        networkBillPeriod:
+                          type: object
+                          title: CreateNetworkBillRequestPeriod
+                          properties:
+                            calculationTimestamp:
+                              $ref: '#/components/schemas/dateTime'
+                            periodStart:
+                              $ref: '#/components/schemas/dateTime'
+                            periodEnd:
+                              $ref: '#/components/schemas/dateTime'
+                            containsCalculatedValues:
+                              type: boolean
+                            measurements:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/measurement'
+                              minItems: 1
+                          required:
+                            - calculationTimestamp
+                            - periodStart
+                            - periodEnd
+                            - containsCalculatedValues
+                            - measurements
+                  required:
+                    - meterEic
+                    - commodityType
+                    - networkBillPeriod
               required:
                 - marketParticipantContext
                 - networkBillTimeSeries
@@ -152,21 +98,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/meterDataCommonResponse'
+                type: object
+                properties:
+                  successful:
+                    type: string
+                required:
+                  - successful
         "400":
-          $ref: '#/components/responses/badRequest'
+          $ref: '#/components/schemas/badRequest'
         "401":
-          $ref: '#/components/responses/unauthorized'
+          $ref: '#/components/schemas/unauthorized'
         "403":
-          $ref: '#/components/responses/forbidden'
+          $ref: '#/components/schemas/forbidden'
         "422":
-          $ref: '#/components/responses/unprocessableEntity'
-  /api/v1/network-bill/change:
+          $ref: '#/components/schemas/unprocessableEntity'
+  /api/v1/network-bill/search:
     post:
       tags:
-        - Network bill
-      operationId: find-network-bill-data-change
-      summary: Find metering points where data was changed within the defined period
+        - NetworkBill
+      operationId: find-network-bill-data
+      summary: Find network bill data by meter EIC, period, and optionally billing sequence
       security:
         - JWTAuth: [ ]
       parameters:
@@ -184,6 +135,7 @@ paths:
             $ref: '#/components/schemas/uniqueId'
       requestBody:
         required: true
+        description: Submit the needed network bill and search metadata attributes.
         content:
           application/json:
             schema:
@@ -191,16 +143,14 @@ paths:
               properties:
                 marketParticipantContext:
                   $ref: '#/components/schemas/marketParticipantContext'
-                updatePeriodStart:
-                  $ref: '#/components/schemas/dateTime'
+                networkBillAttributes:
+                  $ref: '#/components/schemas/networkBillAttributes'
                 pagination:
                   $ref: '#/components/schemas/pagingRequest'
               required:
                 - marketParticipantContext
-                - updatePeriodStart
+                - networkBillAttributes
                 - pagination
-      description: >-
-        Submit the modification period to receive a list of metering points where data has changed during the marked time interval
       responses:
         '200':
           description: OK
@@ -226,26 +176,25 @@ paths:
               schema:
                 type: object
                 properties:
-                  networkBillTimeSeries:
+                  networkBillList:
                     type: array
-                    minItems: 1
                     items:
-                      $ref: '#/components/schemas/networkBillTimeSeries'
+                      $ref: '#/components/schemas/networkBill'
                   pagination:
                     $ref: '#/components/schemas/pagingResponse'
                 required:
-                  - networkBillTimeSeries
+                  - networkBillList
                   - pagination
         "400":
-          $ref: '#/components/responses/badRequest'
+          $ref: '#/components/schemas/badRequest'
         "401":
-          $ref: '#/components/responses/unauthorized'
+          $ref: '#/components/schemas/unauthorized'
         "403":
-          $ref: '#/components/responses/forbidden'
+          $ref: '#/components/schemas/forbidden'
         "404":
-          $ref: '#/components/responses/notFound'
+          $ref: '#/components/schemas/notFound'
         "422":
-          $ref: '#/components/responses/unprocessableEntity'
+          $ref: '#/components/schemas/unprocessableEntity'
 components:
   securitySchemes:
     JWTAuth:
@@ -256,35 +205,35 @@ components:
         Example:
         > Authorization: Bearer <token>
   schemas:
-    dateTime:
-      type: string
-      format: date-time
-      description: ISO 8601 zone datetime
-    uniqueId:
-      type: string
-      format: uuid
-      description: UUID
-    statusCode:
-      type: integer
-      description: HTTP status code
-      minLength: 3
-      maxLength: 3
-    eic:
-      type: string
-      format: eic
-      description: EIC code
-      minLength: 16
-      maxLength: 16
-      # RegEx to verify the EIC format, semantic verification is part of content validation
-      pattern: >-
-        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
-    marketParticipantRole:
-      type: string
-      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
-    commodityType:
-      type: string
-      enum: [ELECTRICITY, NATURAL_GAS]
     networkBillTimeSeries:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+        networkBillPeriod:
+          $ref: '#/components/schemas/networkBillPeriod'
+      required:
+        - meterEic
+        - commodityType
+        - networkBillPeriod
+    networkBillAttributes:
+      type: object
+      properties:
+        meterEic:
+          $ref: '#/components/schemas/eic'
+        periodStart:
+          $ref: '#/components/schemas/dateTime'
+        periodEnd:
+          $ref: '#/components/schemas/dateTime'
+        direction:
+          $ref: '#/components/schemas/direction'
+      required:
+        - meterEic
+        - periodStart
+        - periodEnd
+    networkBill:
       type: object
       properties:
         meterEic:
@@ -306,104 +255,57 @@ components:
         containsCalculatedValues:
           type: boolean
         measurement:
-          type: array
-          items:
-            $ref: '#/components/schemas/networkBillmeasurement'
+          $ref: '#/components/schemas/measurement'
       required:
         - calculationTimestamp
         - periodStart
         - periodEnd
         - containsCalculatedValues
         - measurement
-    networkBillmeasurement:
+    measurement:
       type: object
-      description: Measurement result
       properties:
+        direction:
+          $ref: '#/components/schemas/direction'
         measurementUnit:
-          type: string
-          enum: [KWH, M3]
-        outDay:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
-        outNight:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
-        outTotal:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
-        inDay:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
-        inNight:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
-        inTotal:
-          type: number
-          format: decimal
-          minimum: 0
-          multipleOf: 0.001
+          $ref: '#/components/schemas/measurementUnit'
+        day:
+          $ref: '#/components/schemas/decimal'
+        night:
+          $ref: '#/components/schemas/decimal'
+        total:
+          $ref: '#/components/schemas/decimal'
       required:
+        - direction
         - measurementUnit
-      anyOf:
-        - required: [outDay]
-        - required: [outNight]
-        - required: [outTotal]
-        - required: [inDay]
-        - required: [inNight]
-        - required: [inTotal]
-    meterAttributes:
-      type: object
-      description: Attributes to request meter readings
-      properties:
-        customerEic:
-          $ref: '#/components/schemas/eic'
-        serviceProviderEic:
-          $ref: '#/components/schemas/eic'
-        meterEic:
-          $ref: '#/components/schemas/eic'
-        periodStart:
-          $ref: '#/components/schemas/dateTime'
-        periodEnd:
-          $ref: '#/components/schemas/dateTime'
-      required:
-        - serviceProviderEic
-        - meterEic
-        - periodStart
-        - periodEnd
-    marketParticipantContext:
-      type: object
-      properties:
-        marketParticipantIdentification:
-          $ref: '#/components/schemas/eic'
-        marketParticipantRole:
-          $ref: '#/components/schemas/marketParticipantRole'
-        purpose:
-          type: string
-          maxLength: 50
-        commodityType:
-          $ref: '#/components/schemas/commodityType'
-      required:
-        - marketParticipantIdentification
-        - marketParticipantRole
-        - commodityType
-    meterDataCommonResponse:
-      type: object
-      description: Common meter data metadata
-      properties:
-        meterEic:
-          $ref: '#/components/schemas/eic'
-      required:
-        - meterEic
+        - day
+        - night
+        - total
+    decimal:
+      type: number
+    measurementUnit:
+      type: string
+      enum: [ KWH, M3 ]
+    direction:
+      type: string
+      enum: [ IN, OUT ]
+    dateTime:
+      type: string
+      format: date-time
+      description: ISO 8601 zone datetime
+    uniqueId:
+      type: string
+      format: uuid
+      description: UUID
+    eic:
+      type: string
+      format: eic
+      description: EIC code
+      minLength: 16
+      maxLength: 16
+      # RegEx to verify the EIC format, semantic verification is part of content validation
+      pattern: >-
+        \d{2}[XYZWTVA][A-Z0-9\-]{12}[A-Z0-9]
     pagingRequest:
       type: object
       description: Pagination controls
@@ -427,6 +329,28 @@ components:
         totalPages:
           type: integer
           minimum: 1
+    commodityType:
+      type: string
+      enum: [ ELECTRICITY, NATURAL_GAS ]
+    serviceProviderRole:
+      type: string
+      enum: [ OPEN_SUPPLIER, GRID_OPERATOR, LINE_OPERATOR, CLOSED_DISTRIBUTION_NETWORK, PRODUCER_OPERATOR, CHARGING_POINT_OPERATOR, AGGREGATOR,  ENERGY_SERVICE_PROVIDER ]
+    marketParticipantContext:
+      type: object
+      properties:
+        marketParticipantIdentification:
+          $ref: '#/components/schemas/eic'
+        marketParticipantRole:
+          $ref: '#/components/schemas/serviceProviderRole'
+        commodityType:
+          $ref: '#/components/schemas/commodityType'
+      required:
+        - marketParticipantIdentification
+        - marketParticipantRole
+        - commodityType
+    statusCode:
+      type: integer
+      description: HTTP status code
     badRequest:
       type: object
       description: Bad Request
@@ -467,143 +391,6 @@ components:
           type: string
         cause:
           $ref: '#/components/schemas/defaultProblem'
-  headers:
-    status:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/statusCode'
-    x-document-date-time:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/dateTime'
-    x-document-identification:
-      deprecated: false
-      required: true
-      schema:
-        $ref: '#/components/schemas/uniqueId'
-    x-original-document-identification:
-      deprecated: false
-      required: false
-      schema:
-        $ref: '#/components/schemas/uniqueId'
-  responses:
-    badRequest:
-      description: Bad Request
-      headers:
-        status:
-          description: HTTP status code
-          schema:
-            $ref: '#/components/schemas/statusCode'
-        x-document-date-time:
-          description: Document creation timestamp
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        x-document-identification:
-          description: Document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-        x-original-document-identification:
-          description: Request document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/badRequest'
-    unauthorized:
-      description: Unauthorized
-      headers:
-        status:
-          description: HTTP status code
-          schema:
-            $ref: '#/components/schemas/statusCode'
-        x-document-date-time:
-          description: Document creation timestamp
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        x-document-identification:
-          description: Document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-        x-original-document-identification:
-          description: Request document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/unauthorized'
-    forbidden:
-      description: Forbidden
-      headers:
-        status:
-          description: HTTP status code
-          schema:
-            $ref: '#/components/schemas/statusCode'
-        x-document-date-time:
-          description: Document creation timestamp
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        x-document-identification:
-          description: Document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-        x-original-document-identification:
-          description: Request document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/forbidden'
-    notFound:
-      description: Not found
-      headers:
-        status:
-          description: HTTP status code
-          schema:
-            $ref: '#/components/schemas/statusCode'
-        x-document-date-time:
-          description: Document creation timestamp
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        x-document-identification:
-          description: Document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-        x-original-document-identification:
-          description: Request document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/notFound'
-    unprocessableEntity:
-      description: Unprocessable entity
-      headers:
-        status:
-          description: HTTP status code
-          schema:
-            $ref: '#/components/schemas/statusCode'
-        x-document-date-time:
-          description: Document creation timestamp
-          schema:
-            $ref: '#/components/schemas/dateTime'
-        x-document-identification:
-          description: Document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-        x-original-document-identification:
-          description: Request document unique identification
-          schema:
-            $ref: '#/components/schemas/uniqueId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/unprocessableEntity'
 servers:
   - url: https://test-datahub.elering.ee
 security:

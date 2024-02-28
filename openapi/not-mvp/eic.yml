@@ -12,7 +12,7 @@ paths:
       tags:
         - Eic
       operationId: get-eic-from-range
-      summary: Get a list of unused EICs from a range
+      summary: Get a list of unused EICs from a range - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -95,7 +95,7 @@ paths:
       tags:
         - Eic
       operationId: create-eic-range
-      summary: Create an EIC range for a given operation type
+      summary: Create an EIC range for a given operation type - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -180,7 +180,7 @@ paths:
       tags:
         - Eic
       operationId: verify-eics
-      summary: Verify an EIC
+      summary: Verify an EIC - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -262,7 +262,7 @@ paths:
       tags:
         - Eic
       operationId: generate-eic-check
-      summary: Generate EIC check character
+      summary: Generate EIC check character - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -339,7 +339,7 @@ paths:
       tags:
         - Eic
       operationId: create-eic
-      summary: Create an EIC
+      summary: Create an EIC - NOT IMPLEMENTED
       security:
         - JWTAuth: [ ]
       parameters:
@@ -437,8 +437,6 @@ components:
     statusCode:
       type: integer
       description: HTTP status code
-      minLength: 3
-      maxLength: 3
     eic:
       type: string
       format: eic
@@ -535,13 +533,8 @@ components:
       type: object
       description: Location object
       properties:
-        adsId:
-          type: string
-          format: ads-oid
-          minLength: 10
-          maxLength: 10
-          pattern: >-
-            (MK|OV|AY|LO|VK|LP|CU|EE|ME|ER|MR)\d{8}
+        adrId:
+          type: integer
         county:
           type: string
           maxLength: 100
@@ -560,14 +553,9 @@ components:
           maximum: 99999
         longitude:
           type: number
-          format: decimal
         latitude:
           type: number
-          format: decimal
       required:
-        - adsId
-        - county
-        - municipality
         - locality
         - localAddress
         - postalCode
