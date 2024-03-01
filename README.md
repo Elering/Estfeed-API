@@ -27,7 +27,7 @@ Short description how to rebundle global API to service specific API.
     `openapi split dh-public-test-api.yml --outDir unbundled/`
 
 
-6. as a result is openapi.yml contains with all endpoints
+6. a result is openapi.yml which contains all endpoints
 
    `unbundled/openapi.yml`
 
@@ -71,6 +71,6 @@ Short description how to rebundle global API to service specific API.
 
 10. Bundle new API
 
-    `openapi bundle unbundled/openapi-customer.yml -o bundled/customer.yml`
+    `openapi bundle unbundled/customer.yml -o bundled/customer.yml`
 
 Based on: https://www.wellshapedwords.com/posts/split-files-to-save-time/
